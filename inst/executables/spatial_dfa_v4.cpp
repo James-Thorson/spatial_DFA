@@ -1,12 +1,41 @@
 // Space time 
 #include <TMB.hpp>
+
+// Function for detecting NAs
 template<class Type>
 bool isNA(Type x){
   return R_IsNA(asDouble(x));
 }
+
+// function for logistic transform
+template<class Type>
+Type plogis(Type x){
+  return 1.0 / (1.0 + exp(-x));
+}
+
+// dzinflognorm
+template<class Type>
+Type dzinflognorm(Type x, Type meanlog, Type sdlog, Type zinfl1, Type zinfl2, int give_log=0){
+  Type pos_prob;
+  pos_prob = dnorm( log(x), meanlog, sdlog, false) / x;
+  Type encounter_prob;
+  encounter_prob = plogis( zinfl1 + zinfl2*meanlog );
+  Type joint_prob;
+  if(x==0){
+    joint_prob = 1.0 - encounter_prob;
+  }else{
+    joint_prob = encounter_prob * pos_prob;
+  } 
+  if(give_log) return log(joint_prob); else return joint_prob;
+}
+
+// Main function
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
+  // Settings
+  DATA_FACTOR( Options_vec );
+  
   // Indices
   DATA_INTEGER(n_obs);       // Total number of observations (i)
   DATA_INTEGER(n_sites);	   // Number of stations (s)
@@ -37,6 +66,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(L_val);    // Values in loadings matrix
   PARAMETER_VECTOR(gamma_k);
   PARAMETER_VECTOR(log_sigma_p);
+  PARAMETER_MATRIX(zinfl_pz);
 
   // Random effects
   PARAMETER_ARRAY(Epsilon_input);  // Spatial process variation
@@ -122,7 +152,6 @@ Type objective_function<Type>::operator() ()
   
   // Declare derived quantities
   vector<Type> logchat_i(n_obs);
-  vector<Type> mu_i(n_obs);
   array<Type> psi_njt(n_knots,n_factors,n_years); 
   vector<Type> eta_i(n_obs);
   array<Type> theta_npt(n_knots,n_species,n_years);
@@ -148,12 +177,13 @@ Type objective_function<Type>::operator() ()
   // Probability of observations
   for(int i=0; i<n_obs; i++){
     // Expectation
-    mu_i(i) = eta_i(i) + theta_npt(s_i(i),p_i(i),t_i(i));
+    logchat_i(i) = eta_i(i) + theta_npt(s_i(i),p_i(i),t_i(i));
     // Overdispersion
-    logchat_i(i) = mu_i(i) + delta_i(i) * exp(log_sigma_p(p_i(i)));
+    if( Options_vec(0)==0 ) logchat_i(i) += delta_i(i) * exp(log_sigma_p(p_i(i)));
     // Likelihood
     if( !isNA(c_i(i)) ){                
-      jnll -= dpois( c_i(i), exp(logchat_i(i)), true );
+      if( Options_vec(0)==0 ) jnll -= dpois( c_i(i), exp(logchat_i(i)), true );
+      if( Options_vec(0)==1 ) jnll -= dzinflognorm( c_i(i), logchat_i(i), exp(log_sigma_p(p_i(i))), zinfl_pz(p_i(i),0), zinfl_pz(p_i(i),1), true );
     }
   }
 
@@ -163,10 +193,7 @@ Type objective_function<Type>::operator() ()
   REPORT( logtau_E_j );
   REPORT( VarSpace_j );
   REPORT( VarTime_j );
-  REPORT( rho_j );
-  REPORT( logkappa_j );
-  REPORT( alpha_j );
-  REPORT( phi_j );
+  REPORT( kappa_j );
   REPORT( lambda_j );
   // Penalties
   REPORT( pen_epsilon_j );
@@ -180,7 +207,6 @@ Type objective_function<Type>::operator() ()
   // Predictions 
   REPORT( logchat_i );
   REPORT( eta_i );
-  REPORT( mu_i );
   // Derived fields
   REPORT( theta_npt );
   REPORT( psi_njt );
@@ -192,6 +218,7 @@ Type objective_function<Type>::operator() ()
   REPORT( rho_j );
   REPORT( gamma_k );
   REPORT( log_sigma_p );
+  REPORT( zinfl_pz );
   
   // Return objective function
   return jnll;

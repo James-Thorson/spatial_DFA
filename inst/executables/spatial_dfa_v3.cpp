@@ -162,11 +162,6 @@ Type objective_function<Type>::operator() ()
   REPORT( logtau_E_j );
   REPORT( VarSpace_j );
   REPORT( VarTime_j );
-  REPORT( rho_j );
-  REPORT( logkappa_j );
-  REPORT( alpha_j );
-  REPORT( phi_j );
-  REPORT( lambda_j );
   // Penalties
   REPORT( pen_epsilon_j );
   REPORT( pen_omega_j );
@@ -182,6 +177,14 @@ Type objective_function<Type>::operator() ()
   // Derived fields
   REPORT( theta_npt );
   REPORT( psi_njt );
+  // Parameters
+  REPORT( logkappa_j );
+  REPORT( alpha_j );
+  REPORT( phi_j );
+  REPORT( loglambda_j );
+  REPORT( rho_j );
+  REPORT( gamma_k );
+  REPORT( log_sigma_p );
   
   // Return objective function
   return jnll;
