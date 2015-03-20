@@ -56,6 +56,8 @@ function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale
     DF = rbind(DF, Tmp)
   }}}
   DF = data.frame(DF, row.names=NULL)
+  DF[,'spp'] = factor( letters[DF[,'spp']] )
+  if( n_species>26 ) stop( "problem with using letters")
 
   # Return stuff
   Sim_List = list("DF"=DF, "Psi"=Psi, "Lmat"=Lmat, "phi"=phi, "Loc"=Loc, "Omega"=Omega, "Epsilon"=Epsilon, "Theta"=Theta, "Psi"=Psi)
