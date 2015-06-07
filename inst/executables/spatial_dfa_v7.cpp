@@ -47,6 +47,9 @@ Type objective_function<Type>::operator() ()
 {
   // Settings
   DATA_FACTOR( Options_vec );
+  // Slot 0 -- distribution of data
+  // Slot 1 -- Include Omega? (0=No, 1=Yes)
+  // Slot 2 -- Include Epsilon? (0=No, 1=Yes)
   
   // Indices
   DATA_INTEGER(n_obs);       // Total number of observations (i)
@@ -73,7 +76,7 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX(G2);
 
   // Fixed effects
-  PARAMETER_VECTOR(logkappa_j);         // Controls range of spatial variation
+  PARAMETER_VECTOR(logkappa_j);         // Controls range of spatial variation (0=Omega, 1=Epsilon)
   PARAMETER_VECTOR(alpha_j);   // Mean of Gompertz-drift field
   PARAMETER_VECTOR(phi_j);              // Offset of beginning from equilibrium
   PARAMETER_VECTOR(loglambda_j);        // ratio of temporal and spatial variance for dynamic-factor j
@@ -136,6 +139,8 @@ Type objective_function<Type>::operator() ()
   
   // Derived quantities related to GMRF
   Eigen::SparseMatrix<Type> Q;
+  // Spatial field reporting
+  //GMRF_t<Type> nll_gmrf_spatial(Q)  
 
   // Probability of random fields
   array<Type> Epsilon_tmp(n_knots,n_years);
@@ -150,8 +155,8 @@ Type objective_function<Type>::operator() ()
     pen_epsilon_j(j) += SEPARABLE(AR1(rho_j(j)),GMRF(Q))(Epsilon_tmp);
     pen_omega_j(j) += GMRF(Q)(Omega_input.col(j));
   }
-  jnll_c(0) = pen_epsilon_j.sum();
-  jnll_c(1) = pen_omega_j.sum();
+  if( Options_vec(1)==1 ) jnll_c(1) = pen_omega_j.sum();
+  if( Options_vec(2)==1 ) jnll_c(0) = pen_epsilon_j.sum();
 
   // Probability of overdispersion
   vector<Type> prob_delta_i(n_obs);
@@ -186,10 +191,10 @@ Type objective_function<Type>::operator() ()
   eta_i = X_ik * gamma_k.matrix();
 
   // Computate expected log-densities
+  theta_npt.setZero();
   for(int n=0; n<n_knots; n++){
   for(int p=0; p<n_species; p++){
   for(int t=0; t<n_years; t++){
-    theta_npt(n,p,t) = 0.0;
     for(int j=0; j<n_factors; j++){
       theta_npt(n,p,t) += psi_njt(n,j,t) * L_pj(p,j);
     }
@@ -219,6 +224,7 @@ Type objective_function<Type>::operator() ()
   REPORT( VarTime_j );
   REPORT( kappa_j );
   REPORT( lambda_j );
+  REPORT( Q );
   // Penalties
   REPORT( pen_epsilon_j );
   REPORT( pen_omega_j );
@@ -232,6 +238,8 @@ Type objective_function<Type>::operator() ()
   // Fields
   REPORT( Epsilon_njt );
   REPORT( Omega_nj );
+  REPORT( Epsilon_input );
+  REPORT( Omega_input );
   // Predictions 
   REPORT( logchat_i );
   REPORT( eta_i );
