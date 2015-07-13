@@ -24,14 +24,20 @@ Rotate_Fn = function( L_pj, Psi, RotationMethod="Varimax" ){
   }
 
   # Check for errors
-  approx_equal = function(m1,m2,d=0.001) 2*abs(m1-m2)/(m1+m2)<d
+  approx_equal = function(m1,m2,d=1e-10) (2*abs(m1-m2)/mean(m1+m2)) < d
   # Check covariance matrix
-  if( !all(approx_equal(L_pj%*%t(L_pj),L_pj_rot%*%t(L_pj_rot))) ) stop("Rotation matrix is wrong")
+    # Should be identical for rotated and unrotated
+  if( !all(approx_equal(L_pj%*%t(L_pj),L_pj_rot%*%t(L_pj_rot))) ) stop("Covariance matrix is changed by rotation")
   # Check linear predictor
+    # Should give identical predictions as unrotated
   for(i in 1:dim(Psi)[[1]]){
   for(j in 1:dim(Psi)[[3]]){
     if( !all(approx_equal(L_pj%*%Psi[i,,j],L_pj_rot%*%Psi_rot[i,,j])) ) stop(paste0("Linear predictor is wrong for site ",i," and time ",j))
   }}
+  # Check rotation matrix
+    # Should be orthogonal (R %*% transpose = identity matrix) with determinant one
+    # Doesn't have det(R) = 1; determinant(Hinv$rotmat)!=1 ||
+  if( !all(approx_equal(Hinv$rotmat%*%t(Hinv$rotmat),diag(Nfactors))) ) stop("Rotation matrix is not a rotation")
   
   # Return stuff
   Return = list( "L_pj_rot"=L_pj_rot, "Psi_rot"=Psi_rot, "Hinv"=Hinv )
