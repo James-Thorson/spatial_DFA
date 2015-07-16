@@ -1,5 +1,7 @@
 Sim_Fn <-
-function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale=0.1, SD_O=0.5, SD_E=0.2, SD_extra=0.1, rho=0.8, logMeanDens=1, Lmat=NULL, Loc=NULL ){
+function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale=0.1, SD_O=0.5, SD_E=0.2, SD_extra=0.1, rho=0.8, logMeanDens=1, Lmat=NULL, Loc=NULL, RandomSeed=NA ){
+  if( !is.na(RandomSeed) ) set.seed(RandomSeed) 
+  
   # Parameters
   if( is.null(Lmat) ){
     Lmat = matrix( rnorm(n_factors*n_species), nrow=n_species, ncol=n_factors)
