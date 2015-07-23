@@ -23,7 +23,7 @@ function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale
   # Simulate Omega
   Omega = matrix(NA, nrow=n_stations, ncol=n_factors)
   for(i in 1:n_factors){
-    Omega[,i] = RFsimulate(model = model_O, x=Loc[,'x'], y=Loc[,'y'])@data[,1]
+    Omega[,i] = RFsimulate(model=model_O, x=Loc[,'x'], y=Loc[,'y'])@data[,1]
   }
 
   # Simulate Epsilon
