@@ -1,6 +1,10 @@
 
 Rotate_Fn = function( L_pj, Psi, RotationMethod="Varimax", testcutoff=1e-10 ){
 
+  # Local functions
+  approx_equal = function(m1,m2,d=1e-10) (2*abs(m1-m2)/mean(m1+m2)) < d
+  trunc_machineprec = function(n) ifelse(n<1e-10,0,n)
+  
   # Varimax
   if( RotationMethod=="Varimax" ){
     Hinv = varimax( L_pj, normalize=FALSE )
@@ -24,7 +28,6 @@ Rotate_Fn = function( L_pj, Psi, RotationMethod="Varimax", testcutoff=1e-10 ){
   }
 
   # Check for errors
-  approx_equal = function(m1,m2,d=1e-10) (2*abs(m1-m2)/mean(m1+m2)) < d
   # Check covariance matrix
     # Should be identical for rotated and unrotated
   if( !all(approx_equal(L_pj%*%t(L_pj),L_pj_rot%*%t(L_pj_rot), d=testcutoff)) ) stop("Covariance matrix is changed by rotation")
