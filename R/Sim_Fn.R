@@ -1,3 +1,4 @@
+# n_species=4; n_years=20; n_stations=25; n_factors=2; B_pp=NULL; L_pj=NULL; phi_p=NULL; SpatialScale=0.1; SD_A=0.5; SD_E=0.2; rho=0.8; logMeanDens=1; Loc=NULL
 Sim_Fn <-
 function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale=0.1, SD_O=0.5, SD_E=0.2, SD_extra=0.1, rho=0.8, logMeanDens=1, Lmat=NULL, Loc=NULL, RandomSeed=NA ){
   if( !is.na(RandomSeed) ) set.seed(RandomSeed) 

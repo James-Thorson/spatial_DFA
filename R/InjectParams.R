@@ -19,6 +19,14 @@ InjectParams = function( previous, skeleton ){
   new[["Omega_input"]][,1:ncol(previous[["Omega_input"]])][1:length(as.vector(previous[["Omega_input"]]))] = as.vector(previous[["Omega_input"]])
   # Needs new column
   new[["Epsilon_input"]][,1:dim(previous[["Epsilon_input"]])[2],][1:length(as.vector(previous[["Epsilon_input"]]))] = as.vector(previous[["Epsilon_input"]])
+  
+  # Version specific additions
+  if( Version%in%c("spatial_dfa_v11")){
+    # Identical to previously
+    new[["eta_mb"]] = previous[["eta_mb"]]
+    new[["N_obsfactors"]] = previous[["N_obsfactors"]]
+  }
+  
   # Return new parameter list
   return(new)
 }

@@ -1,4 +1,4 @@
-MakeInput_Fn = function( Version, Nfactors, DF, inla_spde, Kappa_Type="Constant", ObsModel=NULL, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, YearSet=NULL){
+MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_Type="Constant", ObsModel=NULL, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, YearSet=NULL, CheckForBugs=TRUE){
 
   # Infer default values for inputs
   if( is.null(YearSet) ) YearSet = min(DF[,'year']):max(DF[,'year'])
@@ -8,14 +8,16 @@ MakeInput_Fn = function( Version, Nfactors, DF, inla_spde, Kappa_Type="Constant"
 
   # Data size
   Nyears = length(YearSet)
+  Nsamples = length(unique(DF[,'TowID']))
   Nsites = length(unique(DF[,'sitenum']))
   Nspecies = length(levels(DF[,'spp']))
   Nknots = mesh$n
   Nobs = nrow(DF)
   Nfactors_input = ifelse( Nfactors==0, 1, Nfactors )
+  Nobsfactors_input = ifelse( Nobsfactors==0, 1, Nobsfactors )
 
   # Options_vec
-  Options_vec=c( "ObsModel"=ObsModel, "Include_Omega"=Include_Omega, "Include_Epsilon"=Include_Epsilon, "EncounterFunction"=EncounterFunction)
+  Options_vec=c( "ObsModel"=ObsModel, "Include_Omega"=Include_Omega, "Include_Epsilon"=Include_Epsilon, "EncounterFunction"=EncounterFunction, "Correlated_Overdispersion"=ifelse(Nobsfactors==0,0,1))
 
   # Default design matrix
   if( is.null(X_ik) ){
@@ -29,6 +31,7 @@ MakeInput_Fn = function( Version, Nfactors, DF, inla_spde, Kappa_Type="Constant"
   if(Version=="spatial_dfa_v3") TmbData = list("n_obs"=Nobs, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_cov"=ncol(X_ik), "c_i"=DF[,'catch'], "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
   if(Version=="spatial_dfa_v4") TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_cov"=ncol(X_ik), "c_i"=DF[,'catch'], "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
   if(Version%in%c("spatial_dfa_v10","spatial_dfa_v9","spatial_dfa_v8b","spatial_dfa_v8","spatial_dfa_v7","spatial_dfa_v6","spatial_dfa_v5")) TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_cov"=ncol(X_ik), "c_i"=DF[,'catch'], "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "Rotation_jj"=diag(Nfactors_input), "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
+  if(Version%in%c("spatial_dfa_v11")) TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_samples"=Nsamples, "n_obsfactors"=Nobsfactors_input, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_cov"=ncol(X_ik), "c_i"=DF[,'catch'], "m_i"=as.numeric(DF[,'TowID'])-1, "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "Rotation_jj"=diag(Nfactors_input), "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
   #TmbData$c_i = c(1, rep(NA,TmbData$n_obs-1) )
 
   # Parameters
@@ -36,10 +39,12 @@ MakeInput_Fn = function( Version, Nfactors, DF, inla_spde, Kappa_Type="Constant"
   if(Version=="spatial_dfa_v3") TmbParams = list("logkappa_j"=rep(log(100),TmbData$n_factors), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "gamma_k"=rep(1,TmbData$n_cov), "log_sigma_p"=rep(log(1),TmbData$n_species), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs) )
   if(Version%in%c("spatial_dfa_v7","spatial_dfa_v6","spatial_dfa_v5","spatial_dfa_v4")) TmbParams = list("logkappa_j"=rep(log(100),TmbData$n_factors), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "gamma_k"=rep(1,TmbData$n_cov), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs) )
   if(Version%in%c("spatial_dfa_v10","spatial_dfa_v9","spatial_dfa_v8b","spatial_dfa_v8")) TmbParams = list("logkappa_jz"=array(log(100),dim=c(TmbData$n_factors,2)), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "gamma_k"=rep(1,TmbData$n_cov), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs) )
-
+  if(Version%in%c("spatial_dfa_v11")) TmbParams = list("logkappa_jz"=array(log(100),dim=c(TmbData$n_factors,2)), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "L2_val"=rnorm(TmbData$n_obsfactors*TmbData$n_species-TmbData$n_obsfactors*(TmbData$n_obsfactors-1)/2), "gamma_k"=rep(1,TmbData$n_cov), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs), "eta_mb"=array(0,dim=c(TmbData$n_samples,TmbData$n_obsfactors)) )
+                                                                                                                                                                   #   ,
   # Random
   Random = c( "Omega_input", "Epsilon_input", "delta_i" )
   if(Use_REML==TRUE) Random = c(Random, "gamma_k")  #  , "log_zinfl"
+  if(Version%in%c("spatial_dfa_v11")) Random = c(Random, "eta_mb")
   #Random = NULL
 
   # Fixed values
@@ -93,6 +98,20 @@ MakeInput_Fn = function( Version, Nfactors, DF, inla_spde, Kappa_Type="Constant"
   }
   if( !is.na(Options_vec["EncounterFunction"]) && Options_vec["EncounterFunction"]==2 ){
     Map[["zinfl_pz"]] = factor( cbind(1:TmbData$n_species, rep(NA,TmbData$n_species)) )
+  }
+  if( Options_vec["Correlated_Overdispersion"]==0 ){
+    TmbParams[["L2_val"]][] = 0
+    Map[["L2_val"]] = factor( rep(NA,length(TmbParams[["L2_val"]])) )
+    TmbParams[["eta_mb"]][] = 0
+    Map[["eta_mb"]] = factor( array(NA,dim(TmbParams[["eta_mb"]])) )
+  }
+
+  # Check for bugs
+  if( CheckForBugs==TRUE ){
+    if( any(sapply(TmbParams[c("alpha_j","phi_j","loglambda_j","rho_j")],length)<TmbData$n_factors) ) stop("Problem with parameter-vectors subscripted j")
+    if( is.null(EncounterFunction) | is.null(ObsModel)) stop("Problem with NULL inputs")
+    if( max(TmbData$m_i)>TmbData$n_samples | min(TmbData$m_i)<0 ) error("Problem with m_i")
+    if( max(TmbData$t_i)>TmbData$n_years | min(TmbData$t_i)<0 ) error("Problem with t_i")
   }
 
   # Return
