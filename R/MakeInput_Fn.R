@@ -67,7 +67,9 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if( Options_vec['ObsModel']==0){
     Map[["zinfl_pz"]] = factor( rep(NA,prod(dim(TmbParams[["zinfl_pz"]]))) )
   }
-  if( Options_vec['ObsModel']==1 ){
+  if( Options_vec['ObsModel']%in%c(1,2,3) ){
+    # Shrink size for speed-up during compile
+    TmbParams[["delta_i"]] = 0
     Map[["delta_i"]] = factor( rep(NA,length(TmbParams[["delta_i"]])) )
   }
   if( Include_Phi==FALSE | Nfactors==0 ){
@@ -102,7 +104,8 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if( Options_vec["Correlated_Overdispersion"]==0 ){
     TmbParams[["L2_val"]][] = 0
     Map[["L2_val"]] = factor( rep(NA,length(TmbParams[["L2_val"]])) )
-    TmbParams[["eta_mb"]][] = 0
+    # Shrink size for speed-up during compile
+    TmbParams[["eta_mb"]] = array(0,dim=c(1,ncol(TmbParams$eta_mb)))
     Map[["eta_mb"]] = factor( array(NA,dim(TmbParams[["eta_mb"]])) )
   }
 

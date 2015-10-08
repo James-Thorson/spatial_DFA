@@ -83,7 +83,7 @@ Type objective_function<Type>::operator() ()
 {
   // Settings
   DATA_FACTOR( Options_vec );
-  // Slot 0 -- distribution of data
+  // Slot 0 -- distribution of data (0=Lognormal-Poisson; 1=delta-lognormal; 2=delta-gamma; 3=Poisson)
   // Slot 1 -- Include Omega? (0=No, 1=Yes)
   // Slot 2 -- Include Epsilon? (0=No, 1=Yes)
   // Slot 3 -- Form for encounter probability
@@ -213,20 +213,24 @@ Type objective_function<Type>::operator() ()
   if( Options_vec(2)==1 ) jnll_c(1) = pen_epsilon_j.sum();
 
   // Probability of overdispersion
-  vector<Type> prob_delta_i(n_obs);
-  for(int i=0; i<n_obs; i++){
-    prob_delta_i(i) = dnorm( delta_i(i), Type(0.0), Type(1.0), true );
+  if( Options_vec(0)==0 ){
+    vector<Type> prob_delta_i( n_obs );
+    for(int i=0; i<n_obs; i++){
+      prob_delta_i(i) = dnorm( delta_i(i), Type(0.0), Type(1.0), true );
+    }
+    jnll_c(2) = -1 * prob_delta_i.sum();
   }
-  jnll_c(2) = -1 * prob_delta_i.sum();
-
+  
   // Probability of correlated overdispersion
-  matrix<Type> prob_eta_mb(n_samples, n_obsfactors);
-  for(int m=0; m<n_samples; m++){
-  for(int b=0; b<n_obsfactors; b++){
-    prob_eta_mb(m,b) = dnorm( eta_mb(m,b), Type(0.0), Type(1.0), true );
-  }}
-  jnll_c(3) = -1 * prob_eta_mb.sum();
-
+  if( Options_vec(4)==1 ){
+    matrix<Type> prob_eta_mb( n_samples, n_obsfactors);
+    for(int m=0; m<n_samples; m++){
+    for(int b=0; b<n_obsfactors; b++){
+      prob_eta_mb(m,b) = dnorm( eta_mb(m,b), Type(0.0), Type(1.0), true );
+    }}
+    jnll_c(3) = -1 * prob_eta_mb.sum();
+  }
+  
   // Transform random fields
   array<Type> Epsilon_njt(n_knots,n_factors,n_years);
   array<Type> Omega_nj(n_knots,n_factors);
@@ -303,7 +307,6 @@ Type objective_function<Type>::operator() ()
   // Penalties
   REPORT( pen_epsilon_j );
   REPORT( pen_omega_j );
-  REPORT( prob_delta_i );
   REPORT( nll_i );
   REPORT( jnll_c );
   REPORT( jnll );
