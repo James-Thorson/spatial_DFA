@@ -24,7 +24,7 @@ InjectParams = function( Version="spatial_dfa_v10", previous, skeleton ){
   if( Version%in%c("spatial_dfa_v11")){
     # Identical to previously
     new[["eta_mb"]] = previous[["eta_mb"]]
-    new[["N_obsfactors"]] = previous[["N_obsfactors"]]
+    if( length(new[["L2_val"]])==length(previous[["L2_val"]])  )new[["L2_val"]] = previous[["L2_val"]]
   }
   
   # Return new parameter list
