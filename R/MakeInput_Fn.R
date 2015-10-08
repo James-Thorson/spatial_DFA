@@ -58,7 +58,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
     if( Kappa_Type=="Constant" ) Map[["logkappa_j"]] = factor( rep(1,length(TmbParams[["logkappa_j"]])) )
     if( Kappa_Type=="Omega_vs_Epsilon" ) stop("Not implemented")
   }
-  if(Version%in%c("spatial_dfa_v10","spatial_dfa_v9","spatial_dfa_v8b","spatial_dfa_v8")){
+  if(Version%in%c("spatial_dfa_v11","spatial_dfa_v10","spatial_dfa_v9","spatial_dfa_v8b","spatial_dfa_v8")){
     if( Kappa_Type=="Constant" ) Map[["logkappa_jz"]] = factor( array(1,dim=dim(TmbParams[["logkappa_jz"]])) )
     if( Kappa_Type=="Omega_vs_Epsilon" ) Map[["logkappa_jz"]] = factor( outer(rep(1,TmbData$n_factors),c(1,2)) )
   }

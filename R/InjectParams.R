@@ -1,5 +1,5 @@
 
-InjectParams = function( previous, skeleton ){
+InjectParams = function( Version="spatial_dfa_v10", previous, skeleton ){
   # Start from skeleton
   new = skeleton
   # Identical to previous MLE
