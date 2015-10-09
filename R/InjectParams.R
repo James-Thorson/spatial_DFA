@@ -1,5 +1,5 @@
 
-InjectParams = function( Version="spatial_dfa_v10", previous, skeleton ){
+InjectParams = function( previous, skeleton ){
   # Start from skeleton
   new = skeleton
   # Identical to previous MLE
@@ -21,10 +21,16 @@ InjectParams = function( Version="spatial_dfa_v10", previous, skeleton ){
   new[["Epsilon_input"]][,1:dim(previous[["Epsilon_input"]])[2],][1:length(as.vector(previous[["Epsilon_input"]]))] = as.vector(previous[["Epsilon_input"]])
   
   # Version specific additions
-  if( Version%in%c("spatial_dfa_v11")){
+  if( "eta_mb" %in% names(previous) ){
     # Identical to previously
     new[["eta_mb"]] = previous[["eta_mb"]]
     if( length(new[["L2_val"]])==length(previous[["L2_val"]])  )new[["L2_val"]] = previous[["L2_val"]]
+  }
+  if( "gamma_lp" %in% names(previous) ){
+    new[["gamma_lp"]] = previous[["gamma_lp"]]
+  }
+  if( "gamma_ptl" %in% names(previous) ){
+    new[["gamma_ptl"]] = previous[["gamma_ptl"]]
   }
   
   # Return new parameter list
