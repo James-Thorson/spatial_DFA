@@ -328,6 +328,8 @@ Type objective_function<Type>::operator() ()
     REPORT( Index_pt );
     REPORT( ln_Index_pt );
     REPORT( Index_npt );
+    ADREPORT( Index_pt )
+    ADREPORT( ln_Index_pt )
   }
 
   // Spatial field summaries
