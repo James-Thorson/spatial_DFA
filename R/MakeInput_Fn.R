@@ -1,5 +1,8 @@
 MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_Type="Constant", ObsModel=NULL, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, CheckForBugs=TRUE){
 
+  # Options_vec
+  Options_vec=c( "ObsModel"=ObsModel, "Include_Omega"=Include_Omega, "Include_Epsilon"=Include_Epsilon, "EncounterFunction"=EncounterFunction, "Correlated_Overdispersion"=ifelse(Nobsfactors==0,0,1))
+
   # Infer default values for inputs
   if( is.null(YearSet) ) YearSet = min(DF[,'year']):max(DF[,'year'])
   if( is.null(ObsModel) ){
@@ -9,17 +12,20 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
 
   # Data size
   Nyears = length(YearSet)
-  Nsamples = length(unique(DF[,'TowID']))
   Nsites = length(unique(DF[,'sitenum']))
   Nspecies = length(levels(DF[,'spp']))
   Nknots = mesh$n
   Nobs = nrow(DF)
   Nfactors_input = ifelse( Nfactors==0, 1, Nfactors )
   Nobsfactors_input = ifelse( Nobsfactors==0, 1, Nobsfactors )
-
-  # Options_vec
-  Options_vec=c( "ObsModel"=ObsModel, "Include_Omega"=Include_Omega, "Include_Epsilon"=Include_Epsilon, "EncounterFunction"=EncounterFunction, "Correlated_Overdispersion"=ifelse(Nobsfactors==0,0,1))
-
+  if( Options_vec["Correlated_Overdispersion"]==1 ){
+    if( !("TowID" %in% names(DF)) ) stop("with correlated observations, TowID must be a column in DF")
+    Nsamples = length(unique(DF[,'TowID']))
+  }else{
+    if( !("TowID" %in% names(DF)) ) DF = cbind(DF, "TowID"=1)
+    Nsamples = 1
+  }
+  
   # Default catchability design matrix
   if( is.null(X_ik) ){
     X_ik = matrix(0, nrow=Nobs, ncol=1)
@@ -86,7 +92,8 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
     if( Kappa_Type=="Omega_vs_Epsilon" ) Map[["logkappa_jz"]] = factor( outer(rep(1,TmbData$n_factors),c(1,2)) )
   }
 
-  # Run-specific fixed values
+  ##### Run-specific fixed values
+  # ObsModel specification
   if( Options_vec['ObsModel']==0){
     Map[["zinfl_pz"]] = factor( rep(NA,prod(dim(TmbParams[["zinfl_pz"]]))) )
   }
@@ -95,35 +102,42 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
     TmbParams[["delta_i"]] = 0
     Map[["delta_i"]] = factor( rep(NA,length(TmbParams[["delta_i"]])) )
   }
+  # Turn off Phi
   if( Include_Phi==FALSE | Nfactors==0 ){
     Map[["phi_j"]] = factor( rep(NA,length(TmbParams[["phi_j"]])) )
     TmbParams[["phi_j"]] = rep(0,length(TmbParams[["phi_j"]]))
   }
+  # Turn off Rho
   if( Include_Rho==FALSE | Nfactors==0 ){
     Map[["rho_j"]] = factor( rep(NA,length(TmbParams[["rho_j"]])) )
     TmbParams[["rho_j"]] = rep(0,length(TmbParams[["rho_j"]]))
   }
+  # Turn off spatial variation (Omega)
   if( Options_vec['Include_Omega']==FALSE | Nfactors==0 ){
     Map[["Omega_input"]] = factor( array(NA,dim=dim(TmbParams[["Omega_input"]])) )
     TmbParams[["Omega_input"]] = array(0,dim=dim(TmbParams[["Omega_input"]]))
     Map[["loglambda_j"]] = factor( rep(NA,length(TmbParams[["loglambda_j"]])) )
     TmbParams[["loglambda_j"]] = rep(25,length(TmbParams[["loglambda_j"]]))
   }
+  # Turn off spatiotemporal variation (Epsilon)
   if( Options_vec['Include_Epsilon']==FALSE | Nfactors==0 ){
     Map[["Epsilon_input"]] = factor( array(NA,dim=dim(TmbParams[["Epsilon_input"]])) )
     TmbParams[["Epsilon_input"]] = array(0,dim=dim(TmbParams[["Epsilon_input"]]))
     Map[["loglambda_j"]] = factor( rep(NA,length(TmbParams[["loglambda_j"]])) )
     TmbParams[["loglambda_j"]] = rep(25,length(TmbParams[["loglambda_j"]]))
   }
+  # Turn off both spatial and spatiotemporal variation
   if( (Options_vec['Include_Omega']==FALSE & Options_vec['Include_Epsilon']==FALSE) | Nfactors==0 ){
     TmbData$Options_vec[c('Include_Omega','Include_Epsilon')] = 0
     Map[["logkappa_jz"]] = factor( array(NA,dim=dim(TmbParams[["logkappa_jz"]])) )
     Map[["rho_j"]] = factor( rep(NA,length(TmbParams[["rho_j"]])) )
     Map[["L_val"]] = factor( rep(NA,length(TmbParams[["L_val"]])) )
   }
+  # Turn off zero-inflation parameters
   if( !is.na(Options_vec["EncounterFunction"]) && Options_vec["EncounterFunction"]==2 ){
     Map[["zinfl_pz"]] = factor( cbind(1:TmbData$n_species, rep(NA,TmbData$n_species)) )
   }
+  # 
   if( Options_vec["Correlated_Overdispersion"]==0 ){
     TmbParams[["L2_val"]][] = 0
     Map[["L2_val"]] = factor( rep(NA,length(TmbParams[["L2_val"]])) )
@@ -156,8 +170,8 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if( CheckForBugs==TRUE ){
     if( any(sapply(TmbParams[c("alpha_j","phi_j","loglambda_j","rho_j")],length)<TmbData$n_factors) ) stop("Problem with parameter-vectors subscripted j")
     if( is.null(EncounterFunction) | is.null(ObsModel)) stop("Problem with NULL inputs")
-    if( max(TmbData$m_i)>TmbData$n_samples | min(TmbData$m_i)<0 ) error("Problem with m_i")
-    if( max(TmbData$t_i)>TmbData$n_years | min(TmbData$t_i)<0 ) error("Problem with t_i")
+    if( max(TmbData$m_i)>TmbData$n_samples | min(TmbData$m_i)<0 ) stop("Problem with m_i")
+    if( max(TmbData$t_i)>TmbData$n_years | min(TmbData$t_i)<0 ) stop("Problem with t_i")
   }
 
   # Return
