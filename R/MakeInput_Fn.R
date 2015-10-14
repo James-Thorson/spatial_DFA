@@ -1,4 +1,4 @@
-MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_Type="Constant", ObsModel=NULL, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, CheckForBugs=TRUE){
+MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_Type="Constant", ObsModel=NULL, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, IndependentTF=c(FALSE,FALSE), CheckForBugs=TRUE){
 
   # Infer default values for inputs
   if( is.null(YearSet) ) YearSet = min(DF[,'year']):max(DF[,'year'])
@@ -164,6 +164,20 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if( "gamma_ptl"%in%names(TmbParams) && all(X_ntl==0) ){
     Map[["gamma_ptl"]] = factor( array(NA,dim=dim(TmbParams[["gamma_ptl"]])) )
     TmbParams[["gamma_ptl"]][] = 0
+  }
+
+  # Make independent inputs
+  if( IndependentTF[1]==TRUE ){
+    if(Nfactors!=Nspecies) stop("If independent, Nfactors must equal Nspecies")
+    TmbParams[["L_val"]] = diag( rep(1,Nspecies) )[lower.tri(diag(1,Nspecies),diag=TRUE)]
+    Map[["L_val"]] = diag( 1:Nspecies )[lower.tri(diag(1,Nspecies),diag=TRUE)]
+    Map[["L_val"]] = factor( ifelse(Map[["L_val"]]==0,NA,Map[["L_val"]]) )
+  }
+  if( IndependentTF[2]==TRUE ){
+    if(Nfactors!=Nspecies) stop("If independent, Nfactors must equal Nspecies")
+    TmbParams[["L2_val"]] = diag( rep(1,Nspecies) )[lower.tri(diag(1,Nspecies),diag=TRUE)]
+    Map[["L2_val"]] = diag( 1:Nspecies )[lower.tri(diag(1,Nspecies),diag=TRUE)]
+    Map[["L2_val"]] = factor( ifelse(Map[["L_val"]]==0,NA,Map[["L_val"]]) )
   }
 
   # Check for bugs
