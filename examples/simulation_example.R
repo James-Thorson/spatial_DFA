@@ -1,13 +1,13 @@
 
 # Install package
-devtools::install_github("james-thorson/Spatial_DFA", auth_token="918291a743d6fe53aecec3bfc4a27d2b850c688d")
+devtools::install_github("james-thorson/Spatial_DFA", auth_token="67755c140bcbdadec7538c4ee7437afa245c4f41")
 
 # File structure
 RootFile = paste0(getwd(),"/")
 TmbFile = system.file("executables", package="SpatialDFA")
 
 # Settings
-Version = "spatial_dfa_v10"
+Version = "spatial_dfa_v14"
 Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=20, "n_factors"=2, "SpatialScale"=0.25, "SD_extra"=0.05)
 
 # Settings
@@ -53,7 +53,7 @@ long_set = as.numeric(sapply( latlong_set, FUN=function(Char){strsplit(Char,"_")
 mesh = inla.mesh.create( cbind(long_set, lat_set), plot.delay=NULL, extend=list(n=8,offset=-0.15), refine=list(min.angle=26) )  # loc_samp  ;  ,max.edge.data=0.08,max.edge.extra=0.2
 
 ## Create the SPDE/GMRF model, (kappa^2-Delta)(tau x) = W:
-spde = inla.spde2.matern(mesh,alpha=2)
+spde = inla.spde2.matern(mesh, alpha=2)
 
 # Bundle inputs
 InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, inla_spde=spde )
