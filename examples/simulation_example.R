@@ -52,11 +52,8 @@ long_set = as.numeric(sapply( latlong_set, FUN=function(Char){strsplit(Char,"_")
 ## Build SPDE object using INLA
 mesh = inla.mesh.create( cbind(long_set, lat_set), plot.delay=NULL, extend=list(n=8,offset=-0.15), refine=list(min.angle=26) )  # loc_samp  ;  ,max.edge.data=0.08,max.edge.extra=0.2
 
-## Create the SPDE/GMRF model, (kappa^2-Delta)(tau x) = W:
-spde = inla.spde2.matern(mesh, alpha=2)
-
 # Bundle inputs
-InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, inla_spde=spde )
+InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, inla_mesh=mesh )
 
 # Link TMB 
 setwd( TmbFile )

@@ -1,4 +1,8 @@
-MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_Type="Constant", ObsModel=NULL, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, IndependentTF=c(FALSE,FALSE), CheckForBugs=TRUE){
+MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_Type="Constant", ObsModel=NULL, Aniso=FALSE, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, IndependentTF=c(FALSE,FALSE), CheckForBugs=TRUE){
+
+  # Calculate spde inputs
+  if( require(INLA)==FALSE ) stop("Must install INLA from: source('http://www.math.ntnu.no/inla/givemeINLA.R')")
+  inla_spde = INLA::inla.spde2.matern(mesh,alpha=2)
 
   # Infer default values for inputs
   if( is.null(YearSet) ) YearSet = min(DF[,'year']):max(DF[,'year'])
@@ -8,7 +12,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if( is.null(a_n) ) a_n = rep(0,mesh$n)
 
   # Options_vec
-  Options_vec=c( "ObsModel"=ObsModel, "Include_Omega"=Include_Omega, "Include_Epsilon"=Include_Epsilon, "EncounterFunction"=EncounterFunction, "Correlated_Overdispersion"=ifelse(Nobsfactors==0,0,1))
+  Options_vec=c( "ObsModel"=ObsModel, "Include_Omega"=Include_Omega, "Include_Epsilon"=Include_Epsilon, "EncounterFunction"=EncounterFunction, "Correlated_Overdispersion"=ifelse(Nobsfactors==0,0,1), "AnisoTF"=Aniso)
 
   # Data size
   Nyears = length(YearSet)
@@ -50,7 +54,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if( is.null(X_ntl) ){
     X_ntl = array(1, dim=c(Nknots,Nyears,1))
   }else{
-    if( !(Version%in%c("spatial_dfa_v15","spatial_dfa_v14")) ) stop("X_ntl is only used in version spatial_dfa_v14 and higher")
+    if( !(Version%in%c("spatial_dfa_v16","spatial_dfa_v15","spatial_dfa_v14")) ) stop("X_ntl is only used in version spatial_dfa_v14 and higher")
     if( dim(X_ntl)[1] != Nknots ) stop("Check spatial matrix input: X_ntl")    
   }
 
@@ -63,7 +67,19 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if(Version%in%c("spatial_dfa_v13")) TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_samples"=Nsamples, "n_obsfactors"=Nobsfactors_input, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_catchcov"=ncol(X_ik), "n_spacecov"=ncol(X_nl), "c_i"=DF[,'catch'], "m_i"=as.numeric(DF[,'TowID'])-1, "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "X_nl"=X_nl, "a_n"=a_n, "Rotation_jj"=diag(Nfactors_input), "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
   if(Version%in%c("spatial_dfa_v14")) TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_samples"=Nsamples, "n_obsfactors"=Nobsfactors_input, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_catchcov"=ncol(X_ik), "n_spacecov"=ncol(X_nl), "c_i"=DF[,'catch'], "m_i"=as.numeric(DF[,'TowID'])-1, "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "X_ntl"=X_ntl, "a_n"=a_n, "Rotation_jj"=diag(Nfactors_input), "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
   if(Version%in%c("spatial_dfa_v15")) TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_samples"=Nsamples, "n_obsfactors"=Nobsfactors_input, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_catchcov"=ncol(X_ik), "n_spacecov"=ncol(X_nl), "c_i"=DF[,'catch'], "predTF_i"=DF[,'PredTF_i'], "m_i"=as.numeric(DF[,'TowID'])-1, "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "X_ntl"=X_ntl, "a_n"=a_n, "Rotation_jj"=diag(Nfactors_input), "G0"=inla_spde$param.inla$M0, "G1"=inla_spde$param.inla$M1, "G2"=inla_spde$param.inla$M2 )
-  #TmbData$c_i = c(1, rep(NA,TmbData$n_obs-1) )
+  if(Version%in%c("spatial_dfa_v16")) TmbData = list("Options_vec"=Options_vec, "n_obs"=Nobs, "n_samples"=Nsamples, "n_obsfactors"=Nobsfactors_input, "n_sites"=Nsites, "n_years"=Nyears, "n_knots"=Nknots, "n_species"=Nspecies, "n_factors"=Nfactors_input, "n_catchcov"=ncol(X_ik), "n_spacecov"=ncol(X_nl), "c_i"=DF[,'catch'], "predTF_i"=DF[,'PredTF_i'], "m_i"=as.numeric(DF[,'TowID'])-1, "p_i"=as.numeric(DF[,'spp'])-1, "s_i"=DF[,'sitenum']-1, "t_i"=match(DF[,'year'],YearSet)-1, "X_ik"=X_ik, "X_ntl"=X_ntl, "a_n"=a_n, "Rotation_jj"=diag(Nfactors_input), "spde"=NULL, "spde_aniso"=NULL )
+
+  # Add aniso inputs
+  if( "spde" %in% names(TmbData)){
+    if( !("SpatialDeltaGLMM"%in%installed.packages()) || !("mesh"%in%names(formals(SpatialDeltaGLMM::Calc_Anisotropic_Mesh))) ){
+      #if("package:SpatialDeltaGLMM"%in%search()) detach("package:SpatialDeltaGLMM")
+      message( "Installing package SpatialDeltaGLMM from github" )
+      devtools::install_github("nwfsc-assess/geostatistical_delta-GLMM")
+    }
+    MeshList = SpatialDeltaGLMM::Calc_Anisotropic_Mesh(loc_x=NA, mesh=inla_mesh)
+    TmbData[["spde"]] = INLA::inla.spde2.matern(MeshList$mesh)$param.inla[c("M0","M1","M2")]
+    TmbData[["spde_aniso"]] = list("n_s"=MeshList$spde$n.spde, "n_tri"=nrow(MeshList$mesh$graph$tv), "Tri_Area"=MeshList$Tri_Area, "E0"=MeshList$E0, "E1"=MeshList$E1, "E2"=MeshList$E2, "TV"=MeshList$TV-1, "G0"=MeshList$spde$param.inla$M0, "G0_inv"=inla.as.dgTMatrix(solve(MeshList$spde$param.inla$M0)) )
+  }
 
   # Parameters
   if(Version=="spatial_dfa_v2") TmbParams = list("logkappa_j"=rep(log(100),TmbData$n_factors), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "Psi_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "gamma_k"=rep(1,TmbData$n_cov), "log_sigma_p"=rep(log(1),TmbData$n_species), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs) )
@@ -73,6 +89,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
   if(Version%in%c("spatial_dfa_v12","spatial_dfa_v11")) TmbParams = list("logkappa_jz"=array(log(100),dim=c(TmbData$n_factors,2)), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "L2_val"=rnorm(TmbData$n_obsfactors*TmbData$n_species-TmbData$n_obsfactors*(TmbData$n_obsfactors-1)/2), "gamma_k"=rep(1,TmbData$n_cov), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs), "eta_mb"=array(0,dim=c(TmbData$n_samples,TmbData$n_obsfactors)) )
   if(Version%in%c("spatial_dfa_v13")) TmbParams = list("logkappa_jz"=array(log(100),dim=c(TmbData$n_factors,2)), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "L2_val"=rnorm(TmbData$n_obsfactors*TmbData$n_species-TmbData$n_obsfactors*(TmbData$n_obsfactors-1)/2), "gamma_k"=rep(1,TmbData$n_catchcov), "gamma_lp"=matrix(1,nrow=TmbData$n_spacecov,ncol=TmbData$n_species), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs), "eta_mb"=array(0,dim=c(TmbData$n_samples,TmbData$n_obsfactors)) )
   if(Version%in%c("spatial_dfa_v15","spatial_dfa_v14")) TmbParams = list("logkappa_jz"=array(log(100),dim=c(TmbData$n_factors,2)), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "L2_val"=rnorm(TmbData$n_obsfactors*TmbData$n_species-TmbData$n_obsfactors*(TmbData$n_obsfactors-1)/2), "gamma_k"=rep(1,TmbData$n_catchcov), "gamma_ptl"=array(1,dim=unlist(TmbData[c("n_species","n_years","n_spacecov")])), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs), "eta_mb"=array(0,dim=c(TmbData$n_samples,TmbData$n_obsfactors)) )
+  if(Version%in%c("spatial_dfa_v16")) TmbParams = list("ln_H_input"=c(0,0), "logkappa_jz"=array(log(100),dim=c(TmbData$n_factors,2)), "alpha_j"=rep(0,TmbData$n_factors), "phi_j"=rep(0,TmbData$n_factors), "loglambda_j"=rep(log(1),TmbData$n_factors), "rho_j"=rep(0.2,TmbData$n_factors), "L_val"=rnorm(TmbData$n_factors*TmbData$n_species-TmbData$n_factors*(TmbData$n_factors-1)/2), "L2_val"=rnorm(TmbData$n_obsfactors*TmbData$n_species-TmbData$n_obsfactors*(TmbData$n_obsfactors-1)/2), "gamma_k"=rep(1,TmbData$n_catchcov), "gamma_ptl"=array(1,dim=unlist(TmbData[c("n_species","n_years","n_spacecov")])), "log_sigma_p"=rep(log(1),TmbData$n_species), "zinfl_pz"=matrix(0,nrow=TmbData$n_species,ncol=2), "Epsilon_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors,TmbData$n_years)), "Omega_input"=array(0,dim=c(TmbData$n_knots,TmbData$n_factors)), "delta_i"=rep(0,TmbData$n_obs), "eta_mb"=array(0,dim=c(TmbData$n_samples,TmbData$n_obsfactors)) )
                                                                                                                                                                    #   ,
   # Random
   Random = c( "Omega_input", "Epsilon_input", "delta_i" )
@@ -93,12 +110,16 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
     if( Kappa_Type=="Constant" ) Map[["logkappa_j"]] = factor( rep(1,length(TmbParams[["logkappa_j"]])) )
     if( Kappa_Type=="Omega_vs_Epsilon" ) stop("Not implemented")
   }
-  if(Version%in%c("spatial_dfa_v15","spatial_dfa_v14","spatial_dfa_v13","spatial_dfa_v12","spatial_dfa_v11","spatial_dfa_v10","spatial_dfa_v9","spatial_dfa_v8b","spatial_dfa_v8")){
+  if(Version%in%c("spatial_dfa_v16","spatial_dfa_v15","spatial_dfa_v14","spatial_dfa_v13","spatial_dfa_v12","spatial_dfa_v11","spatial_dfa_v10","spatial_dfa_v9","spatial_dfa_v8b","spatial_dfa_v8")){
     if( Kappa_Type=="Constant" ) Map[["logkappa_jz"]] = factor( array(1,dim=dim(TmbParams[["logkappa_jz"]])) )
     if( Kappa_Type=="Omega_vs_Epsilon" ) Map[["logkappa_jz"]] = factor( outer(rep(1,TmbData$n_factors),c(1,2)) )
   }
 
   ##### Run-specific fixed values
+  # Turn off anisotropy
+  if( "ln_H_input"%in%names(TmbParams) & Aniso==FALSE ){
+    Map[["ln_H_input"]] = factor( c(NA,NA) )
+  }
   # ObsModel specification
   if( Options_vec['ObsModel']==0){
     Map[["zinfl_pz"]] = factor( rep(NA,prod(dim(TmbParams[["zinfl_pz"]]))) )
@@ -138,6 +159,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_spde, Kappa_
     Map[["logkappa_jz"]] = factor( array(NA,dim=dim(TmbParams[["logkappa_jz"]])) )
     Map[["rho_j"]] = factor( rep(NA,length(TmbParams[["rho_j"]])) )
     Map[["L_val"]] = factor( rep(NA,length(TmbParams[["L_val"]])) )
+    if( "ln_H_input"%in%names(TmbParams) ) Map[["ln_H_input"]] = factor( c(NA,NA) )
   }
   # Turn off zero-inflation parameters
   if( !is.na(Options_vec["EncounterFunction"]) && Options_vec["EncounterFunction"]==2 ){
