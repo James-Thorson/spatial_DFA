@@ -5,7 +5,8 @@ Rotate_Fn = function( L_pj, Psi, RotationMethod="Varimax", testcutoff=1e-10 ){
   approx_equal = function(m1,m2,d=1e-10) (2*abs(m1-m2)/mean(m1+m2)) < d
   trunc_machineprec = function(n) ifelse(n<1e-10,0,n)
   Nknots = dim(Psi)[1]
-  
+  Nfactors = dim(Psi)[2]
+
   # Varimax
   if( RotationMethod=="Varimax" ){
     Hinv = varimax( L_pj, normalize=FALSE )
