@@ -1,4 +1,4 @@
-	
+	                                                     
 ## Main function to generate data (the OM)
 Generate_scenario_data <- function(Sim_Settings){
 		
@@ -73,6 +73,7 @@ Generate_scenario_data <- function(Sim_Settings){
 	}
 
 	attach(Sim_Settings)
+  on.exit( detach(Sim_Settings) )
 
 	#### Set the bathymetry field
 	model_bathym <- RMgauss(var=SD_O^2, scale=SpatialScale) + RMtrend(Mean_bathym)		
@@ -158,8 +159,9 @@ Generate_scenario_data <- function(Sim_Settings){
 			if(do.tweedie==FALSE) rand.vessel <- matrix(sapply(1:n_species, function(x) qq_vessel[which.vessel.fished]),ncol=n_species)
 			catch_area_vessel <- sapply(1:n_species, function(Y) { hum <- Biomass[[iyear]][xyz,Y]*(1-exp(-sum(rand.vessel[,Y]))); ifelse(hum==0, catch_area_vessel <- rep(0,Effort_area_year[[iyear]][xyz]), catch_area_vessel <- hum*rand.vessel[,Y]/sum(rand.vessel[,Y])); return(catch_area_vessel)})
 			catch_area_vessel <- data.frame(iyear, matrix(rep(c(data.bathym[xyz,-1]), each=Effort_area_year[[iyear]][xyz]),nrow=Effort_area_year[[iyear]][xyz]), which.vessel.fished, matrix(catch_area_vessel,ncol=n_species)); 
-			colnames(catch_area_vessel) <- c("year", "X", "Y", "depth", "vessel", paste0("Sp", 1:n_species))
-			Catch_year_area_mat[xyz,] <- colSums(catch_area_vessel[,-c(1:5)])
+      catch_area_vessel <- matrix(sapply( catch_area_vessel, FUN=as.numeric ), nrow=nrow(catch_area_vessel))
+      colnames(catch_area_vessel) <- c("year", "X", "Y", "depth", "vessel", paste0("Sp", 1:n_species))
+			Catch_year_area_mat[xyz,] <- colSums(catch_area_vessel[,-c(1:5),drop=FALSE])
 			
 			AA <- rbind(AA, catch_area_vessel)
 		}
@@ -228,11 +230,11 @@ Generate_scenario_data <- function(Sim_Settings){
 		abline(0,1, lty=2)
 	}	
 		
-	#### Return data
-	Raw_data <- reshape(Catch_area_year_ind, varying = paste0("Sp", 1:n_species), v.names = "CPUE", timevar = "Species", times= 1:n_species, direction = "long") 
-	Bio <- t(sapply(1:n_years, function(x) colSums(Biomass[[x]])))
+	#### Return data                                                                # v.names="CPUE", 
+	#Raw_data <- reshape(Catch_area_year_ind, varying=paste0("Sp",1:n_species), timevar="Species", times=1:n_species, direction="long") 
+	Raw_data <- NULL
+	for(i in 1:n_species) Raw_data = rbind(Raw_data, cbind(Catch_area_year_ind[,c("year","X","Y","depth","vessel")], "Species"=Catch_area_year_ind[,paste0("Sp",i)]))
+  Bio <- t(sapply(1:n_years, function(x) colSums(Biomass[[x]])))
 	Return = list("Data"= Raw_data, "Biomass"=Bio)
 	return(Return)
-	
-	detach(Sim_Settings)	
 }		
