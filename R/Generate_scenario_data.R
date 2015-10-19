@@ -2,6 +2,10 @@
 ## Main function to generate data (the OM)
 Generate_scenario_data <- function(Sim_Settings){
 		
+	# Libraries
+  if (!require(pacman)) install.packages("pacman")
+	pacman::p_load(MASS, RandomFields, fields, geoR, kml, fpc, gtools, tweedie)
+
   ## generate mvt matrix of an animal from a cell to the other 
 	Mvt_matrix <- function(Pop_param, Depth_eff, Dist_eff, Lat_eff, Depth_func, Dist_func="Exp", Lat_func, x,y,data.bathym){
 		Mvt_mat <- matrix(0,(length(x)*length(y)),(length(x)*length(y)))
