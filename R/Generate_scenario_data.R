@@ -233,7 +233,7 @@ Generate_scenario_data <- function(Sim_Settings){
 	#### Return data                                                                # v.names="CPUE", 
 	#Raw_data <- reshape(Catch_area_year_ind, varying=paste0("Sp",1:n_species), timevar="Species", times=1:n_species, direction="long") 
 	Raw_data <- NULL
-	for(i in 1:n_species) Raw_data = rbind(Raw_data, cbind(Catch_area_year_ind[,c("year","X","Y","depth","vessel")], "Species"=Catch_area_year_ind[,paste0("Sp",i)]))
+	for(i in 1:n_species) Raw_data = rbind(Raw_data, cbind(Catch_area_year_ind[,c("year","X","Y","depth","vessel")], "Species"=i, "CPUE"=Catch_area_year_ind[,paste0("Sp",i)]))
   Bio <- t(sapply(1:n_years, function(x) colSums(Biomass[[x]])))
 	Return = list("Data"= Raw_data, "Biomass"=Bio)
 	return(Return)
