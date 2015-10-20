@@ -1,5 +1,5 @@
 
-InjectParams = function( previous, skeleton ){
+InjectParams = function( previous, skeleton, inject_lambda=TRUE ){
   # Start from skeleton
   new = skeleton
   # Identical to previous MLE
@@ -8,10 +8,11 @@ InjectParams = function( previous, skeleton ){
     new[[parname]] = previous[[parname]]
   }
   # Needs new vector slots
-  for(i in 1:5){
-    parname = c("alpha_j", "phi_j", "loglambda_j", "rho_j", "L_val")[i]
+  for(i in 1:4){
+    parname = c("alpha_j", "phi_j", "rho_j", "L_val")[i]
     new[[parname]][1:length(previous[[parname]])] = previous[[parname]]
   }
+  if(inject_lambda==TRUE) new[["loglambda_j"]][1:length(previous[["loglambda_j"]])] = previous[["loglambda_j"]]  
   # Needs one new row (identical to the row above because of how "map" input works)
   new[["logkappa_jz"]][1:nrow(previous[["logkappa_jz"]]),][] = as.vector(previous[["logkappa_jz"]])
   new[["logkappa_jz"]][nrow(new[["logkappa_jz"]]),] = previous[["logkappa_jz"]][nrow(previous[["logkappa_jz"]]),]

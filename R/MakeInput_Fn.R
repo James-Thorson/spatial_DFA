@@ -120,11 +120,15 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_
   if( "ln_H_input"%in%names(TmbParams) & Aniso==FALSE ){
     Map[["ln_H_input"]] = factor( c(NA,NA) )
   }
+  # Turn off zero-inflation parameters
+  if( !is.na(Options_vec["EncounterFunction"]) && Options_vec["EncounterFunction"]==2 ){
+    Map[["zinfl_pz"]] = factor( cbind(1:TmbData$n_species, rep(NA,TmbData$n_species)) )
+  }
   # ObsModel specification
-  if( Options_vec['ObsModel']==0){
+  if( Options_vec['ObsModel'] %in% c(0,4) ){
     Map[["zinfl_pz"]] = factor( rep(NA,prod(dim(TmbParams[["zinfl_pz"]]))) )
   }
-  if( Options_vec['ObsModel']%in%c(1,2,3) ){
+  if( Options_vec['ObsModel'] %in% c(1,2,3,4) ){
     # Shrink size for speed-up during compile
     TmbParams[["delta_i"]] = 0
     Map[["delta_i"]] = factor( rep(NA,length(TmbParams[["delta_i"]])) )
@@ -160,10 +164,6 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_
     Map[["rho_j"]] = factor( rep(NA,length(TmbParams[["rho_j"]])) )
     Map[["L_val"]] = factor( rep(NA,length(TmbParams[["L_val"]])) )
     if( "ln_H_input"%in%names(TmbParams) ) Map[["ln_H_input"]] = factor( c(NA,NA) )
-  }
-  # Turn off zero-inflation parameters
-  if( !is.na(Options_vec["EncounterFunction"]) && Options_vec["EncounterFunction"]==2 ){
-    Map[["zinfl_pz"]] = factor( cbind(1:TmbData$n_species, rep(NA,TmbData$n_species)) )
   }
   # 
   if( Options_vec["Correlated_Overdispersion"]==0 ){

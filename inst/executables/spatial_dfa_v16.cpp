@@ -299,14 +299,15 @@ Type objective_function<Type>::operator() ()
   Type log_notencounterprob = NA_REAL;
   for(int i=0; i<n_obs; i++){
     // Expectation
-    logchat_i(i) = eta_npt(s_i(i),p_i(i),t_i(i)) + eta_i(i) + theta_npt(s_i(i),p_i(i),t_i(i));
+    logchat_i(i) = eta_npt(s_i(i),p_i(i),t_i(i)) + theta_npt(s_i(i),p_i(i),t_i(i));
     // Overdispersion
+    logchat_i(i) += eta_i(i);
     if( Options_vec(0)==0 ) logchat_i(i) += delta_i(i) * exp(log_sigma_p(p_i(i)));
     if( Options_vec(4)==1 ) logchat_i(i) += eta_mp(m_i(i),p_i(i));
     // Likelihood
     if( !isNA(c_i(i)) ){                
-      if( Options_vec(0)==0 ) nll_i(i) = -1 * dpois( c_i(i), exp(logchat_i(i)), true );
-      if( Options_vec(0)!=0 ){ 
+      if( Options_vec(0)==0 ) nll_i(i) = -1 * dpois( c_i(i), exp(logchat_i(i)), true);
+      if( Options_vec(0)==1 | Options_vec(0)==2 | Options_vec(0)==3 ){ 
         // Calculate encounter probability (only used for delta-lognormal model)
         if( Options_vec(3)==0 ) encounterprob_i(i) = plogis( zinfl_pz(p_i(i),0) + zinfl_pz(p_i(i),1)*logchat_i(i) );
         if( Options_vec(3)==1 ) encounterprob_i(i) = plogis(zinfl_pz(p_i(i),1)) * ( 1.0 - exp(-1 * exp(logchat_i(i)) * exp(zinfl_pz(p_i(i),0))) );
@@ -319,6 +320,7 @@ Type objective_function<Type>::operator() ()
         if( Options_vec(0)==2 ) nll_i(i) = -1 * dzinfgamma(c_i(i), exp(logchat_i(i))/encounterprob_i(i), encounterprob_i(i), log_notencounterprob, exp(log_sigma_p(p_i(i))), true);
         if( Options_vec(0)==3 ) nll_i(i) = -1 * dzinfnorm(c_i(i), exp(logchat_i(i))/encounterprob_i(i), encounterprob_i(i), log_notencounterprob, exp(logchat_i(i))/encounterprob_i(i)*exp(log_sigma_p(p_i(i))), true);
       }
+      if( Options_vec(0)==4 ) nll_i(i) = -1 * dnorm( c_i(i), exp(logchat_i(i)), exp(log_sigma_p(p_i(i))), true);
     }
   }
   jnll_c(4) = ((Type(1.0)-predTF_i)*nll_i).sum();
