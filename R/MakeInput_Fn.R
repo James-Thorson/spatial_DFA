@@ -1,5 +1,5 @@
 MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_Type="Constant", ObsModel=NULL, Aniso=FALSE, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, IndependentTF=c(FALSE,FALSE), CheckForBugs=TRUE){
-
+                                                                   
   # Calculate spde inputs
   if( require(INLA)==FALSE ) stop("Must install INLA from: source('http://www.math.ntnu.no/inla/givemeINLA.R')")
   inla_spde = INLA::inla.spde2.matern(mesh,alpha=2)
@@ -202,7 +202,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_
     Map[["L_val"]] = factor( ifelse(Map[["L_val"]]==0,NA,Map[["L_val"]]) )
   }
   if( IndependentTF[2]==TRUE ){
-    if(Nfactors!=Nspecies) stop("If independent, Nfactors must equal Nspecies")
+    if(Nobsfactors!=Nspecies) stop("If independent, Nfactors must equal Nspecies")
     TmbParams[["L2_val"]] = diag( rep(1,Nspecies) )[lower.tri(diag(1,Nspecies),diag=TRUE)]
     Map[["L2_val"]] = diag( 1:Nspecies )[lower.tri(diag(1,Nspecies),diag=TRUE)]
     Map[["L2_val"]] = factor( ifelse(Map[["L_val"]]==0,NA,Map[["L_val"]]) )
@@ -212,7 +212,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_
   if( CheckForBugs==TRUE ){
     if( any(sapply(TmbParams[c("alpha_j","phi_j","loglambda_j","rho_j")],length)<TmbData$n_factors) ) stop("Problem with parameter-vectors subscripted j")
     if( is.null(EncounterFunction) | is.null(ObsModel)) stop("Problem with NULL inputs")
-    if( max(TmbData$m_i)>TmbData$n_samples | min(TmbData$m_i)<0 ) stop("Problem with m_i")
+    if( Options_vec["Correlated_Overdispersion"]==1 ) if( max(TmbData$m_i)>TmbData$n_samples | min(TmbData$m_i)<0 ) stop("Problem with m_i")
     if( max(TmbData$t_i)>TmbData$n_years | min(TmbData$t_i)<0 ) stop("Problem with t_i")
   }
 
