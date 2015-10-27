@@ -1,6 +1,6 @@
 	                                                     
 ## Main function to generate data (the OM)
-Generate_scenario_data <- function(Sim_Settings){
+Generate_scenario_data_V0 <- function(Sim_Settings){
 		
 	# Libraries
   if (!require(pacman)) install.packages("pacman")
@@ -73,13 +73,12 @@ Generate_scenario_data <- function(Sim_Settings){
 	}
 
 	attach(Sim_Settings)
-    on.exit( detach(Sim_Settings) )
+  on.exit( detach(Sim_Settings) )
 
 	#### Set the bathymetry field
-	model_bathym <- RMgauss(var=SD_O^2, scale=SpatialScale)		
+	model_bathym <- RMgauss(var=SD_O^2, scale=SpatialScale) + RMtrend(Mean_bathym)		
 	Bathym <- RFsimulate(model_bathym, x=Range_X, y=Range_Y)
 	data.bathym <- data.frame(ID = length(Range_X)*length(Range_Y), x = rep(Range_X, length(Range_Y)), y = rep(Range_Y, each=length(Range_X)), z=Bathym@data[,1])
-	data.bathym$z = data.bathym$z+abs(min(data.bathym$z))	# to avoid getting negative depth here depth takes positive real number
 	image.plot(Range_X, Range_Y, matrix(data.bathym$z,nrow=length(Range_X), ncol=length(Range_Y)))
 		
 	#### Set the pop mvt param
@@ -141,7 +140,7 @@ Generate_scenario_data <- function(Sim_Settings){
 		} else { qq <- qq_original }
 		
 		### Continuous catch equation
-		I[[iyear]] <- Biomass[[iyear]]*(1-exp(-qq)) * matrix(price_fish[iyear,], nrow=map.size, ncol=n_species, byrow=T)
+		I[[iyear]] <- Biomass[[iyear]]*(1-exp(-qq)) * matrix(price_fish, nrow=map.size, ncol=n_species, byrow=T)
 		CPUE_tot <- apply(I[[iyear]],1,sum)
 				
 		### Distribute the total effort according to the above predicted CPUE
@@ -160,8 +159,8 @@ Generate_scenario_data <- function(Sim_Settings){
 			if(do.tweedie==FALSE) rand.vessel <- matrix(sapply(1:n_species, function(x) qq_vessel[which.vessel.fished]),ncol=n_species)
 			catch_area_vessel <- sapply(1:n_species, function(Y) { hum <- Biomass[[iyear]][xyz,Y]*(1-exp(-sum(rand.vessel[,Y]))); ifelse(hum==0, catch_area_vessel <- rep(0,Effort_area_year[[iyear]][xyz]), catch_area_vessel <- hum*rand.vessel[,Y]/sum(rand.vessel[,Y])); return(catch_area_vessel)})
 			catch_area_vessel <- data.frame(iyear, matrix(rep(c(data.bathym[xyz,-1]), each=Effort_area_year[[iyear]][xyz]),nrow=Effort_area_year[[iyear]][xyz]), which.vessel.fished, matrix(catch_area_vessel,ncol=n_species)); 
-			catch_area_vessel <- matrix(sapply( catch_area_vessel, FUN=as.numeric ), nrow=nrow(catch_area_vessel))
-			colnames(catch_area_vessel) <- c("year", "X", "Y", "depth", "vessel", paste0("Sp", 1:n_species))
+      catch_area_vessel <- matrix(sapply( catch_area_vessel, FUN=as.numeric ), nrow=nrow(catch_area_vessel))
+      colnames(catch_area_vessel) <- c("year", "X", "Y", "depth", "vessel", paste0("Sp", 1:n_species))
 			Catch_year_area_mat[xyz,] <- colSums(catch_area_vessel[,-c(1:5),drop=FALSE])
 			
 			AA <- rbind(AA, catch_area_vessel)
@@ -189,8 +188,8 @@ Generate_scenario_data <- function(Sim_Settings){
 		windows()
 		nf <- layout(1:2)
 		par(mar=c(1,1,2,1), oma=c(4,4,2,2))
-		hist(Catch_area_year_ind[,'Sp1'], breaks=100)
-		hist(Catch_area_year_ind[,'Sp2'], breaks=100)
+		hist(Catch_area_year_ind[[1]][,3], breaks=100)
+		hist(Catch_area_year_ind[[n_years]][,3], breaks=100)
 
 	  # plot biomass change over time
 		windows()
@@ -235,7 +234,7 @@ Generate_scenario_data <- function(Sim_Settings){
 	#Raw_data <- reshape(Catch_area_year_ind, varying=paste0("Sp",1:n_species), timevar="Species", times=1:n_species, direction="long") 
 	Raw_data <- NULL
 	for(i in 1:n_species) Raw_data = rbind(Raw_data, cbind(Catch_area_year_ind[,c("year","X","Y","depth","vessel")], "Species"=i, "CPUE"=Catch_area_year_ind[,paste0("Sp",i)]))
-	Bio <- t(sapply(1:n_years, function(x) colSums(Biomass[[x]])))
+  Bio <- t(sapply(1:n_years, function(x) colSums(Biomass[[x]])))
 	Return = list("Data"= Raw_data, "Biomass"=Bio)
 	return(Return)
 }		
