@@ -1,23 +1,16 @@
 
 # Install package
-devtools::install_github("james-thorson/Spatial_DFA", auth_token="67755c140bcbdadec7538c4ee7437afa245c4f41")
+devtools::install_github("james-thorson/Spatial_DFA", auth_token=[contact Jim Thorson for a token])
 
 # File structure
-RootFile = paste0(getwd(),"/")
 TmbFile = system.file("executables", package="SpatialDFA")
 
 # Settings
-Version = "spatial_dfa_v14"
+Version = "spatial_dfa_v17"
 Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=20, "n_factors"=2, "SpatialScale"=0.25, "SD_extra"=0.05)
 
 # Settings
 Nfactors = 2
-
-# Date file
-Date = Sys.Date()
-  #Date = "2015-03-17"
-  DateFile = paste0(RootFile,Date,"/")
-  dir.create( DateFile )
 
 # Libraries
 library( INLA )
@@ -28,10 +21,6 @@ library( SpatialDFA )
 
 # Compile TMB model
 setwd( TmbFile )
-if(FALSE){
-  dyn.unload(dynlib(Version))
-  file.remove( paste0(Version,c(".o",".dll")) )
-}
 compile( paste0(Version,".cpp") )
 
 ##############
@@ -56,17 +45,12 @@ mesh = inla.mesh.create( cbind(long_set, lat_set), plot.delay=NULL, extend=list(
 InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, inla_mesh=mesh )
 
 # Link TMB 
-setwd( TmbFile )
 dyn.load( dynlib(Version) )                                                         # log_tau=0.0,
 
 # Initialization
 obj <- MakeADFun(data=InputList[["TmbData"]], parameters=InputList[["TmbParams"]], random=InputList[["Random"]], map=InputList[["Map"]], hessian=FALSE, inner.control=list(maxit=1000) )
 obj$control <- c( obj$control, list(trace=1, parscale=1, REPORT=1, reltol=1e-12, maxit=100) )
 obj$env$inner.control <- c(obj$env$inner.control, list("step.tol"=1e-8, "tol10"=1e-6, "grad.tol"=1e-8) )
-
-# First marginal likelihood and gradient
-obj$fn( obj$par )
-obj$gr( obj$par )
 
 # Bounds
 Upper = rep(Inf, length(obj$par) )
