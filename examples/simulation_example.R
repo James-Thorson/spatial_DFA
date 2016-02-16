@@ -1,9 +1,10 @@
 
 # Install package
-devtools::install_github("james-thorson/Spatial_DFA", auth_token=[contact Jim Thorson for a token])
+#devtools::install_github("james-thorson/Spatial_DFA", auth_token=[contact Jim Thorson for a token])
 
 # File structure
 TmbFile = system.file("executables", package="SpatialDFA")
+# TmbFile = "C:/Users/James.Thorson/Desktop/Project_git/spatial_DFA/inst/executables"
 
 # Settings
 Version = "spatial_dfa_v17"

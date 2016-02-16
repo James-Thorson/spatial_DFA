@@ -102,7 +102,7 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(n_species);   // Number of species (p)
   DATA_INTEGER(n_factors);   // Number of dynamic factors (j)
   DATA_INTEGER(n_catchcov);       // Number of covariates (k)
-  DATA_INTEGER(n_spacecov);       // Number of covariates (k)
+  DATA_INTEGER(n_spacecov);       // Number of covariates (l)
 
   // Data
   DATA_VECTOR( c_i );         // Count for observation
