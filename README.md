@@ -6,6 +6,11 @@ SpatialDFA
 
 Background
 
+Usage
+=============
+
+### Please contact James Thorson if you're planning to use this package
+
 Installation Instructions
 =============
 This function depends on R version >=3.1.1 and a variety of other tools.
