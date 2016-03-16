@@ -1,4 +1,4 @@
-MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_Type="Constant", ObsModel=NULL, Aniso=FALSE, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, IndependentTF=c(FALSE,FALSE), CheckForBugs=TRUE, CorrGroup_pp=NULL, ...){
+MakeInput_Fn = function( Version, Nfactors, DF, inla_mesh, Nobsfactors=0, Kappa_Type="Constant", ObsModel=NULL, Aniso=FALSE, Include_Omega=TRUE, Include_Epsilon=TRUE, EncounterFunction=2, Correlated_Overdispersion=FALSE, Include_Phi=TRUE, Include_Rho=TRUE, Use_REML=FALSE, X_ik=NULL, X_nl=NULL, X_ntl=NULL, a_n=NULL, YearSet=NULL, IndependentTF=c(FALSE,FALSE), CheckForBugs=TRUE, CorrGroup_pp=NULL, ...){
                                                                    
   # Calculate spde inputs
   if( require(INLA)==FALSE ) stop("Must install INLA from: source('http://www.math.ntnu.no/inla/givemeINLA.R')")
@@ -24,7 +24,7 @@ MakeInput_Fn = function( Version, Nfactors, Nobsfactors=0, DF, inla_mesh, Kappa_
   # Data size
   Nyears = length(YearSet)
   Nsites = length(unique(DF[,'sitenum']))
-  Nspecies = length(levels(DF[,'spp']))
+  Nspecies = length(unique(DF[,'spp']))
   Nknots = mesh$n
   Nobs = nrow(DF)
   Nfactors_input = ifelse( Nfactors==0, 1, Nfactors )
