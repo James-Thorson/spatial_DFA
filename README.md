@@ -35,7 +35,17 @@ Note: at the moment, TMB and INLA can be installed using the commands
 Next, please install the SpatialDFA from this GitHub repository using a function in the "devtools" package:
 
     # Install package
-    install_github("james-thorson/SpatialDFA", auth_token="918291a743d6fe53aecec3bfc4a27d2b850c688d") 
+    install_github("james-thorson/SpatialDFA") 
     # Load package
     library(SpatialDFA)
+Works to read and cite if using the software
+=============
+* Thorson, J.T., Ianelli, J.N., Larsen, E., Ries, L., Scheuerell, M.D., Szuwalski, C. & Zipkin, E. (In press) Joint dynamic species distribution models: a tool for community ordination and spatiotemporal monitoring. Global Ecology and Biogeography.
+
+Further information
+=============
+* Thorson, J.T., Fonner, R., Haltuch, M., Ono, K. & Winker, H. (In press) Accounting for spatiotemporal variation and fisher targeting when estimating abundance from multispecies fishery data. Canadian Journal of Fisheries and Aquatic Sciences.
+* Thorson, J.T., Scheuerell, M.D., Shelton, A.O., See, K.E., Skaug, H.J. & Kristensen, K. (2015) Spatial factor analysis: a new tool for estimating joint species distributions and correlations in species range. Methods in Ecology and Evolution, 6, 627–637.
+* Thorson, J.T., Skaug, H.J., Kristensen, K., Shelton, A.O., Ward, E.J., Harms, J.H. & Benante, J.A. (2014) The importance of spatial models for estimating the strength of density dependence. Ecology, 96, 1202–1212.
+
 
