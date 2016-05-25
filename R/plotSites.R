@@ -1,3 +1,4 @@
+#' @export
 plotSites <-
 function( mapObj, x, y, col, cex=2, ... ){
   # Load package

@@ -1,4 +1,4 @@
-
+#' @export
 InjectParams = function( previous, skeleton, inject_lambda=TRUE ){
   # Start from skeleton
   new = skeleton

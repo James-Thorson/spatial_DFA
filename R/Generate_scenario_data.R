@@ -3,6 +3,8 @@
 # Main function to generate data (the OM)
 # Code written by Dr. Kotaro Ono
 ##################
+
+#' @export
 Generate_scenario_data <- function(Sim_Settings){
 		
 	# Libraries

@@ -1,6 +1,7 @@
-# n_species=4; n_years=20; n_stations=25; n_factors=2; B_pp=NULL; L_pj=NULL; phi_p=NULL; SpatialScale=0.1; SD_A=0.5; SD_E=0.2; rho=0.8; logMeanDens=1; Loc=NULL
+
+#' @export
 Sim_Fn <-
-function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale=0.1, SD_O=0.5, SD_E=0.2, SD_extra=0.1, rho=0.8, logMeanDens=1, Lmat=NULL, Loc=NULL, RandomSeed=NA ){
+function( n_species, n_years, simulation_method="grid", n_stations=20, phi=NULL, n_factors=2, SpatialScale=0.1, SD_O=0.5, SD_E=0.2, SD_extra=0.1, rho=0.8, logMeanDens=1, Lmat=NULL, Loc=NULL, RandomSeed=NA ){
   if( !is.na(RandomSeed) ) set.seed(RandomSeed) 
   
   # Parameters
@@ -17,7 +18,12 @@ function( n_species, n_years, n_stations=20, phi=NULL, n_factors=2, SpatialScale
   Beta = rep(logMeanDens, n_species)
 
   # Spatial model
-  if( is.null(Loc) ) Loc = cbind( "x"=runif(n_stations, min=0,max=1), "y"=runif(n_stations, min=0,max=1) )
+  if( is.null(Loc) ){
+    if( simulation_method=="mesh" ) Loc = cbind( "x"=runif(n_stations, min=0,max=1), "y"=runif(n_stations, min=0,max=1) )
+    if( simulation_method=="grid" ){
+      Loc = expand.grid( "x"=1:ceiling(sqrt(n_stations)), "y"=1:ceiling(n_stations/ceiling(sqrt(n_stations))) )
+    }
+  }
   model_O <- RMgauss(var=SD_O^2, scale=SpatialScale)
   model_E <- RMgauss(var=SD_E^2, scale=SpatialScale)
 

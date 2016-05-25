@@ -1,4 +1,4 @@
-
+#' @export
 Rotate_Fn = function( L_pj, Psi, RotationMethod="Varimax", testcutoff=1e-10 ){
 
   # Local functions

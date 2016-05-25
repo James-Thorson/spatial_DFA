@@ -3,15 +3,17 @@
 #devtools::install_github("james-thorson/Spatial_DFA")
 
 # File structure
-TmbFile = system.file("executables", package="SpatialDFA")
-# TmbFile = "C:/Users/James.Thorson/Desktop/Project_git/spatial_DFA/inst/executables"
+#TmbFile = system.file("executables", package="SpatialDFA")
+TmbFile = "C:/Users/James.Thorson/Desktop/Project_git/spatial_DFA/inst/executables"
 
 # Settings
-Version = "spatial_dfa_v17"
-Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=20, "n_factors"=2, "SpatialScale"=0.25, "SD_extra"=0.05)
+Version = "spatial_dfa_v18"
+Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=20, "n_factors"=2, "SpatialScale"=NA, "SD_extra"=0.05, "simulation_method"=c("mesh","grid")[2])
+Sim_Settings[["SpatialScale"]] = ifelse( Sim_Settings[["simulation_method"]]=="grid", 2, 0.25 )
 
 # Settings
 Nfactors = 2
+estimation_method = c("mesh","grid")[2]
 
 # Libraries
 library( INLA )
@@ -29,21 +31,16 @@ compile( paste0(Version,".cpp") )
 ##############
 
 # Simulate data
-Sim_List = Sim_Fn(n_species=Sim_Settings[["n_species"]], n_years=Sim_Settings[["n_years"]], n_stations=Sim_Settings[["n_stations"]], n_factors=Sim_Settings[["n_factors"]], SpatialScale=Sim_Settings[["SpatialScale"]], SD_extra=Sim_Settings[["SD_extra"]])
+Sim_List = Sim_Fn(n_species=Sim_Settings[["n_species"]], simulation_method=Sim_Settings[["simulation_method"]], n_years=Sim_Settings[["n_years"]], n_stations=Sim_Settings[["n_stations"]], n_factors=Sim_Settings[["n_factors"]], SpatialScale=Sim_Settings[["SpatialScale"]], SD_extra=Sim_Settings[["SD_extra"]])
 
 # Unload stuff
 DF = Sim_List[["DF"]]
 
 # lat_set
-latlong_set = paste( Sim_List[["Loc"]][,'y'], Sim_List[["Loc"]][,'x'], sep="_")
-lat_set = as.numeric(sapply( latlong_set, FUN=function(Char){strsplit(Char,"_")[[1]][1]}))
-long_set = as.numeric(sapply( latlong_set, FUN=function(Char){strsplit(Char,"_")[[1]][2]}))
-
-## Build SPDE object using INLA
-mesh = inla.mesh.create( cbind(long_set, lat_set), plot.delay=NULL, extend=list(n=8,offset=-0.15), refine=list(min.angle=26) )  # loc_samp  ;  ,max.edge.data=0.08,max.edge.extra=0.2
+loc_xy = Sim_List$Loc
 
 # Bundle inputs
-InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, inla_mesh=mesh )
+InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, loc_xy=loc_xy, method=estimation_method )
 
 # Link TMB 
 dyn.load( dynlib(Version) )                                                         # log_tau=0.0,
@@ -60,7 +57,7 @@ Lower = rep(-Inf, length(obj$par) )
   Lower[grep("rho_j",names(obj$par))] = -0.99
 
 # Run model
-opt = nlminb(start=obj$env$last.par.best[-c(obj$env$random)], objective=obj$fn, gradient=obj$gr, upper=Upper, lower=Lower, control=list(eval.max=1e4, iter.max=1e4, trace=1, rel.tol=1e-14) )
+for(i in 1:3) opt = nlminb(start=obj$env$last.par.best[-c(obj$env$random)], objective=obj$fn, gradient=obj$gr, upper=Upper, lower=Lower, control=list(eval.max=1e4, iter.max=1e4, trace=1, rel.tol=1e-14) )
 opt[["final_gradient"]] = obj$gr( opt$par )
 Report = obj$report()
 
@@ -81,8 +78,21 @@ if(Nfactors>1){
   Psi_rot = Psi
 }
 
-# Cross-correlations
-cov2cor(L_pj_rot %*% t(L_pj_rot))
+##############
+# Comparison of true and estimated quantities
+##############
 
-# True cross-correlations
+# Covariance
+L_pj_rot %*% t(L_pj_rot)
+Sim_List$Lmat %*% t(Sim_List$Lmat)
+
+# Correlation
+cov2cor(L_pj_rot %*% t(L_pj_rot))
 cov2cor(Sim_List$Lmat %*% t(Sim_List$Lmat))
+
+# Decorrelation distance
+if( Sim_Settings[["simulation_method"]]=="mesh" & estimation_method=="mesh" ){
+  print(Sim_Settings[["SpatialScale"]])
+  print(Report$Range_jz/2)
+}
+

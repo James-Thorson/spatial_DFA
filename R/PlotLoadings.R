@@ -1,3 +1,4 @@
+#' @export
 PlotLoadings = function( L_pj, whichfactor, Nspecies, addtitle=TRUE, LabelPosition="Right", Buffer=c(0,0.1), Labels=rownames(L_pj), Cex=1.2 ){
   plot(1, type="n", xlim=c(0.5,nrow(L_pj)+0.5), ylim=range(L_pj)+diff(range(L_pj))*Buffer, xlab="", ylab="", xaxt="n", xaxs="i" )
   if(LabelPosition=="Xaxis") axis( side=1, at=1:nrow(L_pj), labels=TRUE, las=3)
