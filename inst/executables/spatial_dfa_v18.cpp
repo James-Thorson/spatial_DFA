@@ -217,23 +217,26 @@ Type objective_function<Type>::operator() ()
   //GMRF_t<Type> nll_gmrf_spatial(Q)  
 
   // Probability of random fields
+  Type SigmaRatio_ar2matern;
   array<Type> Epsilon_tmp(n_knots,n_years);
   vector<Type> pen_epsilon_j(n_factors);
   vector<Type> pen_omega_j(n_factors);
   for(int j=0; j<n_factors; j++){
     // Omega
+    SigmaRatio_ar2matern = sqrt(4*M_PI*exp(2*logtau_jz(j,0))*exp(2*logkappa_jz(j,0))) / sqrt((1-exp(logkappa_jz(j,0)*2))*exp(2*logtau_jz(j,0))); // SigmaRatio_ar2matern := SD_ar/SD_matern
     if( Options_vec(6)==0 & Options_vec(5)==0 ) Q = Q_spde(spde, exp(logkappa_jz(j,0)) );
     if( Options_vec(6)==0 & Options_vec(5)==1 ) Q = Q_spde(spde_aniso, exp(logkappa_jz(j,0)), H);
-    if( Options_vec(6)==1 ) Q = pow(1/(exp(logkappa_jz(j,0))*sqrt(4*M_PI)),2) * (M0*pow(1+exp(logkappa_jz(j,0)*2),2) + M1*(1+exp(logkappa_jz(j,0)*2))*(-exp(logkappa_jz(j,0))) + M2*exp(logkappa_jz(j,0)*2));
+    if( Options_vec(6)==1 ) Q = pow(SigmaRatio_ar2matern,-2) * (M0*pow(1+exp(logkappa_jz(j,0)*2),2) + M1*(1+exp(logkappa_jz(j,0)*2))*(-exp(logkappa_jz(j,0))) + M2*exp(logkappa_jz(j,0)*2));
     pen_omega_j(j) += GMRF(Q)(Omega_input.col(j));
     // Epsilon 
     for(int n=0; n<n_knots; n++){
     for(int t=0; t<n_years; t++){
       Epsilon_tmp(n,t) = Epsilon_input(n,j,t);
     }}
+    SigmaRatio_ar2matern = sqrt(4*M_PI*exp(2*logtau_jz(j,0))*exp(2*logkappa_jz(j,0))) / sqrt((1-exp(logkappa_jz(j,0)*2))*exp(2*logtau_jz(j,0))); // SigmaRatio_ar2matern := SD_ar/SD_matern
     if( Options_vec(6)==0 & Options_vec(5)==0 ) Q = Q_spde(spde, exp(logkappa_jz(j,1)) );
     if( Options_vec(6)==0 & Options_vec(5)==1 ) Q = Q_spde(spde_aniso, exp(logkappa_jz(j,1)), H);
-    if( Options_vec(6)==1 ) Q = pow(1/(exp(logkappa_jz(j,1))*sqrt(4*M_PI)),2) * (M0*pow(1+exp(logkappa_jz(j,1)*2),2) + M1*(1+exp(logkappa_jz(j,1)*2))*(-exp(logkappa_jz(j,1))) + M2*exp(logkappa_jz(j,1)*2));
+    if( Options_vec(6)==1 ) Q = pow(SigmaRatio_ar2matern,-2) * (M0*pow(1+exp(logkappa_jz(j,1)*2),2) + M1*(1+exp(logkappa_jz(j,1)*2))*(-exp(logkappa_jz(j,1))) + M2*exp(logkappa_jz(j,1)*2));
     pen_epsilon_j(j) += SEPARABLE(AR1(rho_j(j)),GMRF(Q))(Epsilon_tmp);
   }
   if( Options_vec(1)==1 ) jnll_c(0) = pen_omega_j.sum();
