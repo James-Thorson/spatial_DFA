@@ -6,25 +6,26 @@
 #TmbFile = system.file("executables", package="SpatialDFA")
 TmbFile = "C:/Users/James.Thorson/Desktop/Project_git/spatial_DFA/inst/executables"
 
-# Settings
-Version = "spatial_dfa_v18"
-Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=20, "n_factors"=2, "simulation_method"=c("mesh","grid")[2], "SD_O"=0.5, "SD_E"=0.2, "rho"=0.8, "SpatialScale"=NA, "SD_extra"=0.05)
-Sim_Settings[["SpatialScale"]] = ifelse( Sim_Settings[["simulation_method"]]=="grid", 2, 0.25 )
-
-# Settings
-Nfactors = 2
-estimation_method = c("mesh","grid")[2]
-
 # Libraries
 library( INLA )
 library( TMB )
 
 # Specific libraries
-library( SpatialDFA )  
+library( SpatialDFA )
 
 # Compile TMB model
 setwd( TmbFile )
 compile( paste0(Version,".cpp") )
+
+# Settings
+set.seed(1)
+Version = "spatial_dfa_v18"
+Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=49, "n_factors"=2, "simulation_method"=c("mesh","grid")[2], "SD_O"=0.5, "SD_E"=0.2, "rho"=0.8, "SpatialScale"=NA, "SD_extra"=0.05)
+Sim_Settings[["SpatialScale"]] = ifelse( Sim_Settings[["simulation_method"]]=="grid", 2, 0.25 )
+
+# Settings
+Nfactors = 1
+estimation_method = c("mesh","grid")[2]
 
 ##############
 # Simulation
@@ -93,14 +94,8 @@ cov2cor(L_pj_rot %*% t(L_pj_rot))
 cov2cor(Sim_List$Lmat %*% t(Sim_List$Lmat))
 
 # Decorrelation distance
-if( Sim_Settings[["simulation_method"]]=="mesh" & estimation_method=="mesh" ){
-  print(Sim_Settings[["SpatialScale"]])
-  print(Report$Range_jz/2)
-}
-if( Sim_Settings[["simulation_method"]]=="grid" & estimation_method=="grid" ){
-  print(Sim_Settings[["SpatialScale"]])
-  print( exp(ParHat$logkappa_jz) )
-}
+print(Sim_Settings[["SpatialScale"]])
+print(Report$Range_jz/2)
 
 # Ratio of spatial and spatio-temporal variation
 (Sim_Settings[["SD_E"]] / Sim_Settings[["SD_O"]])^2

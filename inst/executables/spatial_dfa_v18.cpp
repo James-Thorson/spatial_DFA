@@ -172,7 +172,8 @@ Type objective_function<Type>::operator() ()
   array<Type> Range_jz(n_factors,2);
   for(int j=0; j<n_factors; j++){
     lambda_j(j) = exp( loglambda_j(j) );
-    for(int z=0; z<2; z++) Range_jz(j,z) = sqrt(8.0) / exp( logkappa_jz(j,z) );
+    if( Options_vec(6)==0 ) for(int z=0; z<2; z++) Range_jz(j,z) = sqrt(8.0) / exp( logkappa_jz(j,z) );
+    if( Options_vec(6)==1 ) for(int z=0; z<2; z++) Range_jz(j,z) = log(0.1) / logkappa_jz(j,z);
     logtau_jz(j,0) = 0.5*( log(1.0+lambda_j(j)) - log(4.0*pi*exp(2.0*logkappa_jz(j,0))*square(1-rho_j(j))) );
     logtau_jz(j,1) = logtau_jz(j,0) + log(1-rho_j(j)) + logkappa_jz(j,0) - logkappa_jz(j,1) - 0.5*log( lambda_j(j) * (1-square(rho_j(j))) );
     VarSpace_j(j) = 1.0 / ( 4.0*pi*exp(2.0*logtau_jz(j,0))*exp(2.0*logkappa_jz(j,0)) * square(1-rho_j(j)) );
