@@ -292,7 +292,7 @@ MakeInput_Fn = function( Version, Nfactors, DF, loc_xy, method="mesh", Nobsfacto
   }
 
   # Return
-  Return = list("TmbData"=TmbData, "TmbParams"=TmbParams, "Random"=Random, "Map"=Map)
+  Return = list("TmbData"=TmbData, "TmbParams"=TmbParams, "Random"=Random, "Map"=Map, "mesh"=inla_mesh)
   return( Return )
 }
 

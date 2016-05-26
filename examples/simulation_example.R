@@ -3,8 +3,8 @@
 #devtools::install_github("james-thorson/Spatial_DFA")
 
 # File structure
-#TmbFile = system.file("executables", package="SpatialDFA")
-TmbFile = "C:/Users/James.Thorson/Desktop/Project_git/spatial_DFA/inst/executables"
+TmbFile = system.file("executables", package="SpatialDFA")
+#TmbFile = "C:/Users/James.Thorson/Desktop/Project_git/spatial_DFA/inst/executables"
 
 # Libraries
 library( INLA )
