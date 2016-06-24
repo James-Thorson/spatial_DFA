@@ -291,8 +291,18 @@ MakeInput_Fn = function( Version, Nfactors, DF, loc_xy, method="mesh", Nobsfacto
     if( max(TmbData$t_i)>TmbData$n_years | min(TmbData$t_i)<0 ) stop("Problem with t_i")
   }
 
+  # Check mapped stuff
+  Remove_Random = NULL
+  for(i in 1:length(Random) ){
+    if( Random[i]%in%names(Map) && all(is.na(Map[[Random[i]]])) ){
+      Remove_Random = c(Remove_Random, Random[i])
+    }
+  }
+  Random = setdiff(Random, Remove_Random)
+  if(length(Random)==0) Random = NULL
+
   # Return
-  Return = list("TmbData"=TmbData, "TmbParams"=TmbParams, "Random"=Random, "Map"=Map, "mesh"=inla_mesh)
+  Return = list("TmbData"=TmbData, "TmbParams"=TmbParams, "Random"=Random, "Map"=Map, "mesh"=inla_mesh, "Remove_Random"=Remove_Random)
   return( Return )
 }
 
