@@ -5,7 +5,16 @@ Version: 1.0
 Date: 2015-03-17
 Author: James Thorson
 Maintainer: James Thorson <James.T.Thorson@gmail.com>
-Description: Spatial dynamic factor analysis is a model-based approach for estimating spatiotemporal density dependence in community dynamics
-Depends: R (>= 3.1.0), maps, mapdata, mapproj, maptools, RANN, RandomFields, corpcor
+Description: Spatial dynamic factor analysis is a model-based approach for
+    estimating spatiotemporal density dependence in community dynamics
+Depends:
+    R (>= 3.1.0),
+    maps,
+    mapdata,
+    mapproj,
+    maptools,
+    RANN,
+    RandomFields,
+    corpcor
 License: GPL-2
-
+RoxygenNote: 5.0.1

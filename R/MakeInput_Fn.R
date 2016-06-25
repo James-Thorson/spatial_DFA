@@ -21,7 +21,7 @@
 #' @param ObsModel The observation model used
 #' @param Include_Omega Whether to estimate purely spatial variation (Default=TRUE)
 #' @param Include_Epsilon, Whether to incldue spatio-temporal variation (Default=TRUE)
-#' @param EncounterFunction, The link between density and encounter probability (Default=2 is a 2-parameter saturating relationship)
+#' @param EncounterFunction, The link between density and encounter probability; 0=two-parameter logistic relationship; 1=two-parameter logistic relationship with less-than-one saturation; 2=one-parameter saturating relationship (Default=1)
 #' @param Correlated_Overdispersion, Whether to estimate overdispersion (only possible if TowID is present in \code{DF}
 #' @param Include_Phi Whether to estimate each factor in equilibrium (FALSE) or with a fixed offset from equilibrium (TRUE), Default=TRUE
 #' @param Include_Rho Whether to estimate the magnitude of temporal autocorrelation (Default=TRUE)
