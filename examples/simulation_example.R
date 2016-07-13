@@ -12,6 +12,7 @@ library( TMB )
 
 # Specific libraries
 library( SpatialDFA )
+Version = "spatial_dfa_v18"
 
 # Compile TMB model
 setwd( TmbFile )
@@ -19,12 +20,11 @@ compile( paste0(Version,".cpp") )
 
 # Settings
 set.seed(1)
-Version = "spatial_dfa_v18"
-Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=49, "n_factors"=2, "simulation_method"=c("mesh","grid")[2], "SD_O"=0.5, "SD_E"=0.2, "rho"=0.8, "SpatialScale"=NA, "SD_extra"=0.05)
+Sim_Settings = list("n_species"=5, "n_years"=20, "n_stations"=49, "n_factors"=3, "simulation_method"=c("mesh","grid")[2], "SD_O"=0.5, "SD_E"=0.2, "rho"=0.8, "SpatialScale"=NA, "SD_extra"=0.05)
 Sim_Settings[["SpatialScale"]] = ifelse( Sim_Settings[["simulation_method"]]=="grid", 2, 0.25 )
 
 # Settings
-Nfactors = 1
+Nfactors = 2
 estimation_method = c("mesh","grid")[2]
 
 ##############
@@ -44,7 +44,7 @@ loc_xy = Sim_List$Loc
 InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, loc_xy=loc_xy, method=estimation_method )
 
 # Link TMB 
-dyn.load( dynlib(Version) )                                                         # log_tau=0.0,
+dyn.load( dynlib(Version) )
 
 # Initialization
 start_time = Sys.time()
@@ -65,25 +65,10 @@ if( estimation_method=="grid" ){
 for(i in 1:3) opt = nlminb(start=obj$env$last.par.best[-c(obj$env$random)], objective=obj$fn, gradient=obj$gr, upper=Upper, lower=Lower, control=list(eval.max=1e4, iter.max=1e4, trace=1, rel.tol=1e-14) )
 opt[["final_gradient"]] = obj$gr( opt$par )
 opt[["run_time"]] = Sys.time() - start_time
-Report = obj$report()
-ParHat = obj$env$parList()
+SD = sdreport( obj )
 
-# Loadings matrix
-L_pj = Report$L_pj
-dimnames(L_pj) = list(levels(DF[,'spp']), paste("Factor",1:Nfactors))
-
-# Extract factors
-Psi = Report$psi_njt
-
-# Rotate
-if(Nfactors>1){
-  RotateList = Rotate_Fn( L_pj=L_pj, Psi=Psi, RotationMethod="PCA", testcutoff=1e-5 )
-  L_pj_rot = RotateList[["L_pj_rot"]]
-  Psi_rot = RotateList[["Psi_rot"]]
-}else{
-  L_pj_rot = L_pj
-  Psi_rot = Psi
-}
+# Summarize results
+Results = Summary( obj, species_names=levels(DF[,'spp']) )
 
 ##############
 # Comparison of true and estimated quantities
