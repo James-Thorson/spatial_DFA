@@ -1,11 +1,41 @@
+
+#' Rotate results
+#'
+#' \code{Rotate_Fn} rotates results from a factor model
+#'
+#' @param Cov_jj Covariance calculated from loadings matrix
+#' @param L_pj Loadings matrix for `p` categories and `j` factors (calculated from \code{Cov_jj} if it is provided)
+#' @param Psi Array of factors (1st dimension: spatial knots;  2nd dimension: factors;  3rd dimension:  time)
+#' @param RotationMethod Method used for rotation, Options: "PCA" (recommended) or "Varimax"
+#' @param testcutoff tolerance for numerical rounding when confirming that rotation doesn't effect results
+
+#' @return tagged list of outputs
+#' \describe{
+#'   \item{L_pj_rot}{Loadings matrix after rotation}
+#'   \item{Psi_rot}{Factors after rotation}
+#'   \item{Hinv}{Object used for rotation}
+#' }
+
 #' @export
-Rotate_Fn = function( L_pj, Psi, RotationMethod="Varimax", testcutoff=1e-10 ){
+Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcutoff=1e-10 ){
 
   # Local functions
   approx_equal = function(m1,m2,d=1e-10) (2*abs(m1-m2)/mean(m1+m2)) < d
   trunc_machineprec = function(n) ifelse(n<1e-10,0,n)
   Nknots = dim(Psi)[1]
   Nfactors = dim(Psi)[2]
+
+  # Optional inputs
+  if( !is.null(Cov_jj) ){
+    message( "Re-calculating L_pj from Cov_jj")
+    L_pj = t(chol(Cov_jj))[,1:Nfactors]
+  }else{
+    if( !is.null(L_pj) ){
+      message("Using L_pj for loadings matrix")
+    }else{
+      stop( "Must provide either L_pj or Cov_jj" )
+    }
+  }
 
   # Varimax
   if( RotationMethod=="Varimax" ){

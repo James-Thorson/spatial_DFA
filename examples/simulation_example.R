@@ -68,7 +68,7 @@ opt[["run_time"]] = Sys.time() - start_time
 SD = sdreport( obj )
 
 # Summarize results
-Results = Summary( obj, species_names=levels(DF[,'spp']) )
+Results = Summarize( obj, species_names=levels(DF[,'spp']) )
 
 ##############
 # Comparison of true and estimated quantities

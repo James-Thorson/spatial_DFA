@@ -1,7 +1,7 @@
 
 #' Summarize and explain results
 #'
-#' \code{Summary} is intended to help document results, by providing explanation for outputs from \code{obj$report()}
+#' \code{Summarize} is intended to help document results, by providing explanation for outputs from \code{obj$report()}
 #'
 #' @param obj the TMB object after it has been previously optimized
 #' @param species_names an optional character-vector giving species names
@@ -22,7 +22,7 @@
 #' }
 
 #' @export
-Summary = function( obj, species_names=NULL, rotation_method="PCA" ){
+Summarize = function( obj, species_names=NULL, rotation_method="PCA" ){
   # fill in defaults
   if( is.null(species_names) ) species_names = paste0("Species_",1:obj$env$data$n_species)
 
