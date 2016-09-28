@@ -24,6 +24,7 @@ tagged list of outputs
   \item{L_pj_rot}{Loadings matrix after rotation}
   \item{Psi_rot}{Factors after rotation}
   \item{Hinv}{Object used for rotation}
+  \item{L_pj}{Loadings matrix}
 }
 }
 \description{

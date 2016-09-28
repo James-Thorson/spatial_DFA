@@ -14,13 +14,14 @@
 #'   \item{L_pj_rot}{Loadings matrix after rotation}
 #'   \item{Psi_rot}{Factors after rotation}
 #'   \item{Hinv}{Object used for rotation}
+#'   \item{L_pj}{Loadings matrix}
 #' }
 
 #' @export
 Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcutoff=1e-10 ){
 
   # Local functions
-  approx_equal = function(m1,m2,d=1e-10) (2*abs(m1-m2)/mean(m1+m2)) < d
+  approx_equal = function(m1,m2,denominator=mean(m1+m2),d=1e-10) (2*abs(m1-m2)/denominator) < d
   trunc_machineprec = function(n) ifelse(n<1e-10,0,n)
   Nknots = dim(Psi)[1]
   Nfactors = dim(Psi)[2]
@@ -71,16 +72,19 @@ Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcut
       # Should give identical predictions as unrotated
     for(i in 1:dim(Psi)[[1]]){
     for(j in 1:dim(Psi)[[length(dim(Psi))]]){
-      if( !all(approx_equal(L_pj%*%Psi[i,,j],L_pj_rot%*%Psi_rot[i,,j], d=testcutoff)) ) stop(paste0("Linear predictor is wrong for site ",i," and time ",j))
+      MaxDiff = max(L_pj%*%Psi[i,,j] - L_pj_rot%*%Psi_rot[i,,j])
+      if( !all(approx_equal(L_pj%*%Psi[i,,j],L_pj_rot%*%Psi_rot[i,,j], d=testcutoff, denominator=1)) ) stop(paste0("Linear predictor is wrong for site ",i," and time ",j," with difference ",MaxDiff))
     }}
     # Check rotation matrix
       # Should be orthogonal (R %*% transpose = identity matrix) with determinant one
       # Doesn't have det(R) = 1; determinant(Hinv$rotmat)!=1 ||
-    if( !all(approx_equal(Hinv$rotmat%*%t(Hinv$rotmat),diag(Nfactors), d=testcutoff)) ) stop("Rotation matrix is not a rotation")
+    Diag = Hinv$rotmat %*% t(Hinv$rotmat)
+    diag(Diag) = ifelse( diag(Diag)==0,1,diag(Diag) )
+    if( !all(approx_equal(Diag,diag(Nfactors), d=testcutoff)) ) stop("Rotation matrix is not a rotation")
   }
 
   # Return stuff
-  Return = list( "L_pj_rot"=L_pj_rot, "Psi_rot"=Psi_rot, "Hinv"=Hinv )
+  Return = list( "L_pj_rot"=L_pj_rot, "Psi_rot"=Psi_rot, "Hinv"=Hinv, "L_pj"=L_pj )
   if(RotationMethod=="PCA") Return[["Eigen"]] = Eigen
   return( Return )
 }
