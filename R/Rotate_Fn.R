@@ -20,11 +20,17 @@
 #' @export
 Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcutoff=1e-10 ){
 
+  # If missing time, add a third dimension
+  if( length(dim(Psi))==2 ){
+    Psi = array( Psi, dim=c(dim(Psi),1) )
+  }
+
   # Local functions
   approx_equal = function(m1,m2,denominator=mean(m1+m2),d=1e-10) (2*abs(m1-m2)/denominator) < d
   trunc_machineprec = function(n) ifelse(n<1e-10,0,n)
   Nknots = dim(Psi)[1]
   Nfactors = dim(Psi)[2]
+  Nyears = dim(Psi)[3]
 
   # Optional inputs
   if( !is.null(Cov_jj) ){
@@ -59,8 +65,7 @@ Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcut
     # My new factors
     Hinv = list("rotmat"=corpcor::pseudoinverse(L_pj_rot)%*%L_pj)
     Psi_rot = array(NA, dim=dim(Psi))
-    if(length(dim(Psi_rot))==3) for( n in 1:Nknots ) Psi_rot[n,,] = Hinv$rotmat %*% Psi[n,,]
-    if(length(dim(Psi_rot))==2) for( n in 1:Nknots ) Psi_rot[n,] = Hinv$rotmat %*% Psi[n,]
+    for( n in 1:Nknots ) Psi_rot[n,,] = Hinv$rotmat %*% Psi[n,,]
   }
 
   # Check for errors
@@ -71,7 +76,7 @@ Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcut
     # Check linear predictor
       # Should give identical predictions as unrotated
     for(i in 1:dim(Psi)[[1]]){
-    for(j in 1:dim(Psi)[[length(dim(Psi))]]){
+    for(j in 1:dim(Psi)[[3]]){
       MaxDiff = max(L_pj%*%Psi[i,,j] - L_pj_rot%*%Psi_rot[i,,j])
       if( !all(approx_equal(L_pj%*%Psi[i,,j],L_pj_rot%*%Psi_rot[i,,j], d=testcutoff, denominator=1)) ) stop(paste0("Linear predictor is wrong for site ",i," and time ",j," with difference ",MaxDiff))
     }}
