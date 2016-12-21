@@ -1,7 +1,7 @@
 
 # Install package
 #devtools::install_github("james-thorson/Spatial_DFA")
-#devtools::install_github("kaskr/TMB_contrib_R")
+#devtools::install_github("kaskr/TMB_contrib_R/TMBhelper")
 
 # File structure
 TmbFile = system.file("executables", package="SpatialDFA")
