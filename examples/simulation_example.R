@@ -1,6 +1,7 @@
 
 # Install package
 #devtools::install_github("james-thorson/Spatial_DFA")
+#devtools::install_github("kaskr/TMB_contrib_R")
 
 # File structure
 TmbFile = system.file("executables", package="SpatialDFA")
@@ -41,13 +42,16 @@ DF = Sim_List[["DF"]]
 loc_xy = Sim_List$Loc
 
 # Bundle inputs
+#Nobsfactors=0; Kappa_Type="Constant"; ObsModel=NULL;
+#  Aniso=FALSE; Include_Omega=TRUE; Include_Epsilon=TRUE; EncounterFunction=2; Correlated_Overdispersion=FALSE;
+#  Include_Phi=TRUE; Include_Rho=TRUE; Use_REML=FALSE; X_ik=NULL; X_nl=NULL; X_ntl=NULL; a_n=NULL; YearSet=NULL;
+#  IndependentTF=c(FALSE,FALSE); CheckForBugs=TRUE; CorrGroup_pp=NULL
 InputList = MakeInput_Fn( Version=Version, DF=DF, Nfactors=Nfactors, loc_xy=loc_xy, method=estimation_method )
 
 # Link TMB 
 dyn.load( dynlib(Version) )
 
 # Initialization
-start_time = Sys.time()
 obj <- MakeADFun(data=InputList[["TmbData"]], parameters=InputList[["TmbParams"]], random=InputList[["Random"]], map=InputList[["Map"]], hessian=FALSE, inner.control=list(maxit=1000) )
 obj$control <- c( obj$control, list(trace=1, parscale=1, REPORT=1, reltol=1e-12, maxit=100) )
 obj$env$inner.control <- c(obj$env$inner.control, list("step.tol"=1e-8, "tol10"=1e-6, "grad.tol"=1e-8) )
@@ -62,10 +66,9 @@ if( estimation_method=="grid" ){
 }
 
 # Run model
-for(i in 1:3) opt = nlminb(start=obj$env$last.par.best[-c(obj$env$random)], objective=obj$fn, gradient=obj$gr, upper=Upper, lower=Lower, control=list(eval.max=1e4, iter.max=1e4, trace=1, rel.tol=1e-14) )
-opt[["final_gradient"]] = obj$gr( opt$par )
-opt[["run_time"]] = Sys.time() - start_time
-SD = sdreport( obj )
+opt = TMBhelper::Optimize(obj=obj, upper=Upper, lower=Lower, getsd=TRUE, newtonsteps=0, loopnum=3 )
+Report = obj$report()
+ParHat = obj$env$parList()
 
 # Summarize results
 Results = Summarize( obj, species_names=levels(DF[,'spp']) )
@@ -75,7 +78,7 @@ Results = Summarize( obj, species_names=levels(DF[,'spp']) )
 ##############
 
 # Correlation
-cov2cor(L_pj_rot %*% t(L_pj_rot))
+cov2cor(Results$L_pj_rot %*% t(Results$L_pj_rot))
 cov2cor(Sim_List$Lmat %*% t(Sim_List$Lmat))
 
 # Decorrelation distance
