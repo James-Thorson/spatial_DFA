@@ -35,6 +35,9 @@ Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcut
   # Optional inputs
   if( !is.null(Cov_jj) ){
     message( "Re-calculating L_pj from Cov_jj")
+    if( sum(eigen(Cov_jj)$values>testcutoff)<ncol(Cov_jj) ){
+      stop("Calculating L_pj from Cov_jj in 'Rotate_Fn' only works well when Cov_jj is full rank")
+    }
     L_pj = t(chol(Cov_jj))[,1:Nfactors]
   }else{
     if( !is.null(L_pj) ){

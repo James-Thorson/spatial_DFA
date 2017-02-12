@@ -52,7 +52,7 @@ MakeInput_Fn = function( Version, Nfactors, DF, loc_xy, method="mesh", Nobsfacto
   # Calculate spde inputs
   if( require(INLA)==FALSE ) stop("Must install INLA from: source('http://www.math.ntnu.no/inla/givemeINLA.R')")
   # Build SPDE object using INLA
-  inla_mesh = inla.mesh.create( loc_xy )  # loc_samp  ;  ,max.edge.data=0.08,max.edge.extra=0.2
+  inla_mesh = INLA::inla.mesh.create( loc_xy )  # loc_samp  ;  ,max.edge.data=0.08,max.edge.extra=0.2
   inla_spde = INLA::inla.spde2.matern(inla_mesh, alpha=2)
 
   # 2D AR1 grid
