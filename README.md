@@ -35,9 +35,9 @@ Note: at the moment, TMB and INLA can be installed using the commands
 Next, please install the SpatialDFA from this GitHub repository using a function in the "devtools" package:
 
     # Install package
-    install_github("james-thorson/SpatialDFA") 
+    install_github("james-thorson/Spatial_DFA") 
     # Load package
-    library(SpatialDFA)
+    library(Spatial_DFA)
 Works to read and cite if using the software
 =============
 * Thorson, J.T., Ianelli, J.N., Larsen, E., Ries, L., Scheuerell, M.D., Szuwalski, C. & Zipkin, E. (In press) Joint dynamic species distribution models: a tool for community ordination and spatiotemporal monitoring. Global Ecology and Biogeography.
