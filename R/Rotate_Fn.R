@@ -71,6 +71,12 @@ Rotate_Fn = function( Cov_jj=NULL, L_pj=NULL, Psi, RotationMethod="PCA", testcut
     for( n in 1:Nknots ) Psi_rot[n,,] = Hinv$rotmat %*% Psi[n,,]
   }
 
+  # Flip around
+  for( j in 1:dim(Psi)[2] ){
+    Psi_rot[,j,] = Psi_rot[,j,] * sign(sum(L_pj_rot[,j]))
+    L_pj_rot[,j] = L_pj_rot[,j] * sign(sum(L_pj_rot[,j]))
+  }
+
   # Check for errors
   # Check covariance matrix
     # Should be identical for rotated and unrotated
