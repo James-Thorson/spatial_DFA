@@ -18,7 +18,12 @@ Depends:
     RANN,
     RandomFields,
     RandomFieldsUtils,
-    corpcor
+    corpcor,
+    TMBhelper,
+    FishStatsUtils
+Remotes:
+    james-thorson/FishStatsUtils,
+    kaskr/TMB_contrib_R/TMBhelper
 Suggests: 
     INLA,
 License: GPL-2

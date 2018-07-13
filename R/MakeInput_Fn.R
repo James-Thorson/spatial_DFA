@@ -149,12 +149,7 @@ MakeInput_Fn = function( Version, Nfactors, DF, loc_xy, method="mesh", Nobsfacto
 
   # Add aniso inputs
   if( "spde" %in% names(TmbData)){
-    if( !("SpatialDeltaGLMM"%in%installed.packages()) || !("anisotropic_mesh"%in%names(formals(SpatialDeltaGLMM::Calc_Anisotropic_Mesh))) ){
-      #if("package:SpatialDeltaGLMM"%in%search()) detach("package:SpatialDeltaGLMM")
-      message( "Installing package SpatialDeltaGLMM from github" )
-      devtools::install_github("nwfsc-assess/geostatistical_delta-GLMM")
-    }
-    MeshList = SpatialDeltaGLMM::Calc_Anisotropic_Mesh(Method=switch(method,"mesh"="Mesh","grid"="Grid"), loc_x=loc_xy, anisotropic_mesh=inla_mesh)
+    MeshList = FishStatsUtils::Calc_Anisotropic_Mesh(Method=switch(method,"mesh"="Mesh","grid"="Grid"), loc_x=loc_xy, anisotropic_mesh=inla_mesh)
     TmbData[["spde"]] = MeshList$isotropic_spde$param.inla[c("M0","M1","M2")]
     TmbData[["spde_aniso"]] = list("n_s"=MeshList$anisotropic_spde$n.spde, "n_tri"=nrow(MeshList$anisotropic_mesh$graph$tv), "Tri_Area"=MeshList$Tri_Area, "E0"=MeshList$E0, "E1"=MeshList$E1, "E2"=MeshList$E2, "TV"=MeshList$TV-1, "G0"=MeshList$anisotropic_spde$param.inla$M0, "G0_inv"=inla.as.dgTMatrix(solve(MeshList$anisotropic_spde$param.inla$M0)) )
   }
